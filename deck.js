@@ -151,46 +151,46 @@ class Euchre {
   startGame(){
     //decide dealer, shuffle deck, deal cards... decide trump?
     if (this.dealer === 0) {
-      console.log('0 player is dealer');
+      // console.log('0 player is dealer');
       this.deck.shuffle();
       this.deck.deal();
       this.realdealer = 0;
       this.leader = 1;
       this.partner = 2;
-      console.log(`leader is ${this.leader}`);
+      // console.log(`leader is ${this.leader}`);
       // console.log(this.deck);
 
     } else if (this.dealer === 1){
-      console.log('computer 1 is dealer');
+      // console.log('computer 1 is dealer');
       this.deck.shuffle();
       this.deck.deal();
       this.realdealer = 1;
       this.leader = 2;
       this.partner = 3;
-      console.log(`leader is ${this.leader}`);
+      // console.log(`leader is ${this.leader}`);
       // i.e. computer decides to pickup or pass...
       document.getElementById('deck').style.gridRowStart='4'; //this works to change deck position!
       document.getElementById('deck').style.gridColumnStart='1';
 
     } else if (this.dealer === 2) {
-      console.log('computer 2 is dealer');
+      // console.log('computer 2 is dealer');
       this.deck.shuffle();
       this.deck.deal();
       this.realdealer = 2;
       this.leader = 3;
       this.partner = 0;
-      console.log(`leader is ${this.leader}`);
+      // console.log(`leader is ${this.leader}`);
       document.getElementById('deck').style.gridRowStart='1';
       document.getElementById('deck').style.gridColumnStart='6';
 
     } else {
-      console.log('computer 3 is dealer');
+      // console.log('computer 3 is dealer');
       this.deck.shuffle();
       this.deck.deal();
       this.realdealer = 3;
       this.leader = 0;
       this.partner = 1;
-      console.log(`leader is ${this.leader}`);
+      // console.log(`leader is ${this.leader}`);
       document.getElementById('deck').style.gridRowStart='6';
       document.getElementById('deck').style.gridColumnStart='9';
     }
@@ -202,6 +202,7 @@ class Euchre {
       text.innerText = 'waiting for computer...';
       this.roundTrump = upcard.firstElementChild.dataset.value.slice(2).trim();
       this.roundValues = [];
+      this.leadValue = 0
       //if cpu orderUp === true, then dealer (computer or player)
       //must pick up the card and discard! person left of the dealer then begins playing the round
       for (var i=0; i< 4; i++) {
@@ -211,9 +212,11 @@ class Euchre {
           this.isLeader();
           this.cpuLead();
           this.nextPlayer();
-          this.cpuLead();
+          this.cpuPlay();
           this.nextPlayer();
-          this.cpuLead();
+          this.cpuPlay();
+          console.log('round values '+this.roundValues);
+          break;
         }
       }
 
@@ -253,8 +256,8 @@ class Euchre {
       this.getPlayer().forEach(card => arr.push(card.firstElementChild.dataset.value.slice(2).trim())); //puts suits of cards in array
       var counts = {};
       arr.forEach(function(x) {counts[x] = (counts[x] || 0) + 1;}) // counts all suits in array / in cpu's hand
-      console.log(counts);
-      console.log(Object.keys(counts).length + ' suited');
+      // console.log(counts);
+      // console.log(Object.keys(counts).length + ' suited');
       var numTrump = counts[upcard.firstElementChild.dataset.value.slice(2).trim()]; //gets amount of potential trump minus the left...
       if (numTrump === undefined) {
         numTrump = 0;
@@ -263,7 +266,7 @@ class Euchre {
       if (this.isLeft() === true) {
         numTrump = numTrump + 1;
       }
-      console.log('potential trump ' + numTrump);
+      // console.log('potential trump ' + numTrump);
 
       if (numTrump >= 4) {
         text.innerText = `Player ${this.leader} orders it up!`;
@@ -342,6 +345,12 @@ class Euchre {
   }
 
   cpuLead() {
+    var opposite = {
+      "♠":"♣",
+      "♣":"♠",
+      "♥":"♦",
+      "♦":"♥"
+    };
     if (this.isSideAce() === true) {
       var arr1 = [];
       this.getPlayer().forEach(card => arr1.push(card.firstElementChild.dataset.value));
@@ -365,8 +374,8 @@ class Euchre {
       document.getElementById(this.getPlayer()[index].id).style.gridRowStart=x;
       document.getElementById(this.getPlayer()[index].id).style.gridColumnStart=y;
 
-
-
+      this.leadValue = 14; //this condition is always an off-suit ace
+      this.roundValues.push(this.leadValue);  //adds into trick/round scoring array
       // console.log(this.getPlayer()[index]);
       this.leadingSuit = this.getPlayer()[index].firstElementChild.dataset.value.slice(2).trim();
       // console.log(this.leadingSuit);
@@ -399,18 +408,33 @@ class Euchre {
 
       if (arr2.includes('9 '+this.roundTrump) === true) {
         var index = arr2.indexOf('9 '+this.roundTrump)
+        this.leadValue = 19;
+        this.roundValues.push(this.leadValue);
       } else if (arr2.includes('10 '+this.roundTrump) === true) {
         var index = arr2.indexOf('10 '+this.roundTrump)
+        this.leadValue = 20;
+        this.roundValues.push(this.leadValue);
       } else if (arr2.includes('Q '+this.roundTrump) === true) {
         var index = arr2.indexOf('Q '+this.roundTrump)
+        this.leadValue = 21;
+        this.roundValues.push(this.leadValue);
       } else if (arr2.includes('K '+this.roundTrump) === true) {
         var index = arr2.indexOf('K '+this.roundTrump)
+        this.leadValue = 22;
+        this.roundValues.push(this.leadValue);
       } else if (arr2.includes('A '+this.roundTrump) === true) {
         var index = arr2.indexOf('A '+this.roundTrump)
+        this.leadValue = 23;
+        this.roundValues.push(this.leadValue);
       } else if (arr2.includes('J '+opposite[this.roundTrump]) === true) {
         var index = arr2.indexOf('J '+opposite[this.roundTrump])
+        this.leftIsLead = true;
+        this.leadValue = 24;
+        this.roundValues.push(this.leadValue);
       } else if (arr2.includes('J '+this.roundTrump) === true ) {
         var index = arr2.indexOf('J '+this.roundTrump)
+        this.leadValue = 25;
+        this.roundValues.push(this.leadValue);
       } else {
         var index = 0;
       }
@@ -441,10 +465,12 @@ class Euchre {
         var y = '5';
       }
 
+      if (this.getPlayer()[0].firstElementChild.dataset.value === 'J '+opposite[this.roundTrump]) {
+        this.leftIsLead = true;
+      }
 
 
-
-      console.log(this.getPlayer()[0].id); // prints id of specific card
+      // console.log(this.getPlayer()[0].id); // prints id of specific card
 
       document.getElementById(this.getPlayer()[0].id).style.gridRowStart=x;
       document.getElementById(this.getPlayer()[0].id).style.gridColumnStart=y;
@@ -453,8 +479,11 @@ class Euchre {
       //finish play, pass, and play order.then onto scoring.
 
       //below line gets value of played card, still need to determine if trump or not...
-      console.log('value '+ CARD_VALUE_MAP[this.getPlayer()[0].firstElementChild.dataset.value.slice(0,2).trim()])
+      // console.log('value '+ CARD_VALUE_MAP[this.getPlayer()[0].firstElementChild.dataset.value.slice(0,2).trim()])
       this.leadingSuit = this.getPlayer()[0].firstElementChild.dataset.value.slice(2).trim();
+      this.leadValue = CARD_VALUE_MAP[this.getPlayer()[0].firstElementChild.dataset.value.slice(0,2).trim()]
+      this.roundValues.push(this.leadValue);
+      //NOTE: above doesn't work if trump is in the first slot / 0 index
       // console.log(this.leadingSuit);
       return this.leadingSuit;
       }
@@ -462,20 +491,136 @@ class Euchre {
 
   cpuPlay() {
     //reads what suit was lead and requires suit to be followed.
+    //need to add leading card to round/trick scoring array
+
+
+    if (this.leader === 1) {
+      var x = '5';
+      var y = '3';
+    } else if (this.leader === 2) {
+      var x = '4';
+      var y = '5';
+    } else if (this.leader === 3) {
+      var x = '5';
+      var y = '7';
+    }
+    else {
+      var x = '6';
+      var y = '5';
+    }
+
+    var opposite = {
+      "♠":"♣",
+      "♣":"♠",
+      "♥":"♦",
+      "♦":"♥"
+    };
+    var leftSuit = opposite[this.roundTrump];
+
     var arr = [];
     var indexes = [];
     this.getPlayer().forEach(card => arr.push(card.firstElementChild.dataset.value.slice(2).trim()))
-    for (var i=0; i < arr.length -1; i++){
+    //if leading card is Left Bauer, trump needs to be lead. not sure if working...
+    if (this.leftIsLead === true) {
+      this.leadingSuit = this.roundTrump;
+    }
+
+    for (var i=0; i < arr.length; i++){
       if (arr[i] === this.leadingSuit) {
-        indexes.push(i);
+        indexes.push(i); //indexes of the same suit that was lead
       }
     }
-    // if indexes.length < 1 , no trump in hand lead accordingly
-    
+    if (this.roundTrump === this.leadingSuit && this.isLeft() === true) {
+      indexes.push(this.indexOfLeft);
+      //next adjust values to MAP to TRUMP
+
+    }
+    else if (this.leadingSuit === leftSuit && this.isLeft() === true) {  // prevents left from being played as its suit
+      if (indexes.length === 1) {
+        console.log(`Computer ${this.leader} doesn't have to follow suit`); //take with lowest trump card if partner doesn't have it won
+        return
+      } else {
+        indexes.splice(indexes.indexOf(this.indexOfLeft), 1); //was an index probelm but solved.
+        // console.log(indexes+' should have removed left bauer index');
+      }
+    }
+
+    //above code runs, can identify whether or not a hand can follow suit. including left bauer!
+
+    if (indexes.length >= 1) {
+      var newArr = [];
+      var holding = [];
+      // console.log(`Computer ${this.leader} can follow suit! at indexes `+indexes);
+      // console.log('first card value is '+ CARD_VALUE_MAP[this.getPlayer()[indexes[0]].firstElementChild.dataset.value.slice(0,2).trim()])
+      if (this.roundTrump === this.leadingSuit && this.isLeft() === true) {
+        indexes.forEach(index => newArr.push(TRUMP_VALUE_MAP[this.getPlayer()[index].firstElementChild.dataset.value.slice(0,2).trim()]))
+        newArr.pop() //removes 25 value of jack and replaces it with left value
+        newArr.push(24);
+      } else if (this.roundTrump === this.leadingSuit) {
+        indexes.forEach(index => newArr.push(TRUMP_VALUE_MAP[this.getPlayer()[index].firstElementChild.dataset.value.slice(0,2).trim()]))
+      } else {
+        indexes.forEach(index => newArr.push(CARD_VALUE_MAP[this.getPlayer()[index].firstElementChild.dataset.value.slice(0,2).trim()]))
+      }
+
+      if (newArr.length === 1) { //if the cpu only has one of that suit they play it
+        document.getElementById(this.getPlayer()[indexes[0]].id).style.gridRowStart=x;
+        document.getElementById(this.getPlayer()[indexes[0]].id).style.gridColumnStart=y;
+        console.log(`Computer ${this.leader} must follow suit!`);
+        this.roundValues.push(newArr[0]);
+        return
+      }
+      else if (newArr.length > 1 ) {
+        var highCard = 0;
+        var index = 0;
+        for (var i=0; i < newArr.length; i++) {
+          if (newArr[i] > highCard) {
+            highCard = newArr[i];
+            index = i;
+            console.log('highcard is ' +highCard);
+          }
+        }
+        document.getElementById(this.getPlayer()[indexes[index]].id).style.gridRowStart=x;
+        document.getElementById(this.getPlayer()[indexes[index]].id).style.gridColumnStart=y;
+        console.log(`Computer ${this.leader} follows suit with high card ${highCard}!`);
+        this.roundValues.push(highCard);
+        return
+    }
+  }
+  else {
+    console.log(`Computer ${this.leader} doesn't have to follow suit`);
+    //if partner is taking trick throw off, else throw low trump
+    //if trump is lead and partner doesn't have it won throw higher trump otherwise
+    //throw a lowest off suit card / try and short suit.
+    if (this.roundValues.length === 1 && this.leadingSuit === this.roundTrump) {
+      // cpu doesn't have trump. short suit yourself if low card or throw lowest card
+      var arr3 = [];
+      var suits = ["♠", "♣", "♥", "♦"]
+      this.getPlayer().forEach(card => arr3.push(card.firstElementChild.dataset.value.slice(2).trim()))
+      var countingSuits = {};
+      for (var i = 0; i < arr3.length; i++) {
+        var num = arr3[i];
+        countingSuits[num] = countingSuits[num] ? countingSuits[num] + 1: 1; //counting # of ea suit in hand
+      }
+      //check value from oject to find if only 1 suit, get index, and play if "low card" Q or lower
+      
 
 
+    } else if (this.roundValues.length === 1 && this.leadingSuit !== this.roundTrump) {
+        //throw low trump
+
+    } else if (this.roundValues.length === 2 && this.roundValues[0] > this.roundValues[1] && this.leadingSuit !== this.roundTrump) {
+      //if partner is winning trick throw off/ try to short suit, else trump
+
+    } else if (this.roundValues.length === 3 && this.roundValues[1] > (this.roundValues[0] && this.roundValues[2])) {
+      //same rules as above
+
+    }
+
+    return
 
   }
+}
+
 
 
   isLeader() {
@@ -495,11 +640,12 @@ class Euchre {
       var trumpSuit = upcard.firstElementChild.dataset.value.slice(2).trim();
       var left = opposite[trumpSuit];
 
+
       this.getPlayer().forEach(card => anyJacks.push((card.firstElementChild.dataset.value)));
       // console.log(anyJacks);
       // console.log(anyJacks.includes('J '+left)); //boolean
       if (anyJacks.includes('J '+left) === true) {
-        // console.log(anyJacks.indexOf('J '+ left)); // index of left in hand
+        this.indexOfLeft = anyJacks.indexOf('J '+ left); // index of left in hand
         return true;
       } else {
           return false;
