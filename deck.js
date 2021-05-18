@@ -47,7 +47,8 @@ var cp3CardSlot5 = document.querySelector('.cp3slotcard5');
 const passButton = document.querySelector('.pass');
 var upcard = document.querySelector('.deck');
 const text = document.querySelector('.text');
-// const upcard = this.cards[20];
+var team1tricks = document.querySelector('#trick1score')
+var team2tricks = document.querySelector('#trick2score')
 
 function freshDeck() {
   return SUITS.flatMap(suit => {
@@ -138,6 +139,7 @@ class Euchre {
     this.score2 = document.getElementById('score2');
     this.deck = new Deck(); //i.e. game.deck.shuffle();
     this.cards = new Card(); // I don't think I need to use this, but it's possible.
+    this.busy = true;
 
     // this.team1 = document.getElementsByClassName('t1');
     // this.team2 = document.getElementsByClassName('t2');
@@ -151,46 +153,46 @@ class Euchre {
   startGame(){
     //decide dealer, shuffle deck, deal cards... decide trump?
     if (this.dealer === 0) {
-      // console.log('0 player is dealer');
+      console.log('0 player is dealer');
       this.deck.shuffle();
       this.deck.deal();
       this.realdealer = 0;
       this.leader = 1;
       this.partner = 2;
-      // console.log(`leader is ${this.leader}`);
+      console.log(`leader is ${this.leader}`);
       // console.log(this.deck);
 
     } else if (this.dealer === 1){
-      // console.log('computer 1 is dealer');
+      console.log('computer 1 is dealer');
       this.deck.shuffle();
       this.deck.deal();
       this.realdealer = 1;
       this.leader = 2;
       this.partner = 3;
-      // console.log(`leader is ${this.leader}`);
+      console.log(`leader is ${this.leader}`);
       // i.e. computer decides to pickup or pass...
       document.getElementById('deck').style.gridRowStart='4'; //this works to change deck position!
       document.getElementById('deck').style.gridColumnStart='1';
 
     } else if (this.dealer === 2) {
-      // console.log('computer 2 is dealer');
+      console.log('computer 2 is dealer');
       this.deck.shuffle();
       this.deck.deal();
       this.realdealer = 2;
       this.leader = 3;
       this.partner = 0;
-      // console.log(`leader is ${this.leader}`);
+      console.log(`leader is ${this.leader}`);
       document.getElementById('deck').style.gridRowStart='1';
       document.getElementById('deck').style.gridColumnStart='6';
 
     } else {
-      // console.log('computer 3 is dealer');
+      console.log('computer 3 is dealer');
       this.deck.shuffle();
       this.deck.deal();
       this.realdealer = 3;
       this.leader = 0;
       this.partner = 1;
-      // console.log(`leader is ${this.leader}`);
+      console.log(`leader is ${this.leader}`);
       document.getElementById('deck').style.gridRowStart='6';
       document.getElementById('deck').style.gridColumnStart='9';
     }
@@ -203,51 +205,45 @@ class Euchre {
       this.roundTrump = upcard.firstElementChild.dataset.value.slice(2).trim();
       this.roundValues = [];
       this.leadValue = 0
-      //if cpu orderUp === true, then dealer (computer or player)
-      //must pick up the card and discard! person left of the dealer then begins playing the round
+      this.team1tricks = 0;
+      this.team2tricks = 0;
+      team1tricks.innerText = this.team1tricks
+      team2tricks.innerText = this.team2tricks
       for (var i=0; i< 4; i++) {
         if (this.orderUp() === false) { //if someone passes then next player
           continue
         } else {
-          this.isLeader();
-          this.cpuLead();
-          this.nextPlayer();
-          this.cpuPlay();
-          this.nextPlayer();
-          this.cpuPlay();
-          console.log('round values '+this.roundValues);
+          if (this.realdealer === 0) { //player is dealer
+            this.playerPickUp();
+            //need to change this.playerPickUp & this.playerDiscard()
+            //so program does not automatically call the other
+              // this.isLeader();
+              // setTimeout(() => {
+              //   this.cpuLead();
+              //   this.nextPlayer();
+              // }, 2500);
+              // setTimeout(() => {
+              //   this.cpuPlay();
+              //   this.nextPlayer();
+              // }, 5000);
+              // setTimeout(() => {
+              //   this.cpuPlay();
+              //   this.nextPlayer();
+              // }, 7500);
+              // setTimeout(() => {
+              //   this.play();
+              // }, 10000);
+
+              // setTimeout(() => {
+              //   this.isRoundWinner();
+              // }, 12000);
+
+          } else {
+            this.cpuPickUp(); //figure out what computer is dealer then call user play accordingly
+          }
           break;
         }
       }
-
-  //
-  //     if (this.orderUp() === false) {
-  //       this.isLeader();
-  //       this.cpuLead();
-  //       this.nextPlayer();
-  //       setTimeout(() => {
-  //       this.cpuLead();
-  //       this.nextPlayer();
-  //     }, 3000);
-  //       setTimeout(() => {
-  //       this.cpuLead();
-  //     }, 6000);
-  // } else if (this.orderUp() === false) { //aka someone passes
-  //     if (this.orderUp() === true) {
-  //       this.isLeader()
-  //       this.cpuLead()
-  //       this.nextPlayer()
-  //       this.cpuLead()
-  //     }
-  //     else if (this.orderUp() === false) {
-  //       if (this.orderUp() === true) {
-  //         this.isLeader()
-  //         this.cpuLead()
-  //         this.nextPlayer()
-  //         this.cpuLead()
-  //       }
-  //     }
-  // }
 }
 
   orderUp() {
@@ -335,14 +331,95 @@ class Euchre {
     }
   }
 
+  continue() {
+    return this.busy = false;
+  }
+
   pass(){
     //add pass counter for screw the dealer
     return this.nextPlayer();
   }
 
-  discard() {
+  cpuPickUp() {
+    //called when the computer must pickup trump
+    var opposite = {
+      "♠":"♣",
+      "♣":"♠",
+      "♥":"♦",
+      "♦":"♥"
+    };
+    this.leader = this.realdealer;
+    text.innerText = `Computer ${this.leader} picks it up and is discarding...`
+    var arr = [];
+    var suits = ["♠", "♣", "♥", "♦"]
+    this.getDealer().forEach(card => arr.push(card.firstElementChild.dataset.value.slice(2).trim()))
+    var countingSuits = {};
+    for (var i = 0; i < arr.length; i++) {
+      var num = arr[i];
+      countingSuits[num] = countingSuits[num] ? countingSuits[num] + 1: 1; //counting # of ea suit in hand
+    }
+    for (var key in countingSuits) {
+      if (countingSuits[key] === 1 && key !== this.roundTrump) {
+        // and dont discard left
+        var index = arr.indexOf(key)
+        if (this.getDealer()[index].firstElementChild.dataset.value !== 'J '+opposite[this.roundTrump] && this.getDealer()[index].firstElementChild.dataset.value.slice(0,2).trim() !== ('A' || 'K') ) {
+          //if the one suit is not the left, or a singleton A or K, then discard it
+          console.log(`Computer ${this.realdealer} picks it up, discards, & short suit themself`);
+          setTimeout(() =>  {
+          // this.getDealer()[index].innerHTML = '';
+          upcard.classList.remove('deck');
+          upcard.classList.add(this.getDealer()[index].id);
+          }, 2500);
+          return
+        }
+      } else { //discard low card as long as it's not trump or left
+          var holding = [];
+          var lowvals = [];
+          for (var i= 0; i< arr.length; i++) {
+            if (arr[i] !== this.roundTrump) {
+              holding.push(i)
+              lowvals.push(CARD_VALUE_MAP[this.getDealer()[i].firstElementChild.dataset.value.slice(0,2).trim()])
+            }
+          }
+          var min = Math.min(...lowvals);
+          var minIndex = lowvals.indexOf(min)
+          var realIndex = holding[minIndex]
+          console.log(`Computer ${this.realdealer} picks it up, discards, & short suit themself`);
+          setTimeout(() =>  {
+          // this.getDealer()[realIndex].innerHTML = '';
+          upcard.classList.remove('deck');
+          upcard.classList.add(this.getDealer()[realIndex].id);
+          }, 2500);
+          return
+      }
+    }
+
 
   }
+
+//playHand() works on first round realdealer === 0 or when player has last play of hand i.e. cpu1 leads
+  playHand() {
+    this.isLeader();
+    console.log(`leader is ${this.leader}`);
+    setTimeout(() => {
+      this.cpuLead();
+      this.nextPlayer();
+    }, 2500);
+    setTimeout(() => {
+      this.cpuPlay();
+      this.nextPlayer();
+    }, 5000);
+    setTimeout(() => {
+      this.cpuPlay();
+      this.nextPlayer();
+    }, 7500);
+    setTimeout(() => {
+      this.play();
+    }, 10000);
+  }
+
+
+
 
   cpuLead() {
     var opposite = {
@@ -538,7 +615,57 @@ class Euchre {
     else if (this.leadingSuit === leftSuit && this.isLeft() === true) {  // prevents left from being played as its suit
       if (indexes.length === 1) {
         console.log(`Computer ${this.leader} doesn't have to follow suit`); //take with lowest trump card if partner doesn't have it won
-        return
+        var arr3 = [];
+        var suits = ["♠", "♣", "♥", "♦"]
+        this.getPlayer().forEach(card => arr3.push(card.firstElementChild.dataset.value.slice(2).trim()))
+        var countingSuits = {};
+        for (var i = 0; i < arr3.length; i++) {
+          var num = arr3[i];
+          countingSuits[num] = countingSuits[num] ? countingSuits[num] + 1: 1; //counting # of ea suit in hand
+        }
+        if (countingSuits.hasOwnProperty(this.roundTrump) === true) {
+          if (countingSuits[this.roundTrump] === 1) {
+            var index = arr3.indexOf(this.roundTrump)
+            var lowtrump = TRUMP_VALUE_MAP[this.getPlayer()[index].firstElementChild.dataset.value.slice(0,2).trim()]
+              document.getElementById(this.getPlayer()[index].id).style.gridRowStart=x;
+              document.getElementById(this.getPlayer()[index].id).style.gridColumnStart=y;
+              console.log(`Computer ${this.leader} throws ${lowtrump} and trumps!`);
+              this.roundValues.push(lowtrump);
+              return
+          } else if (countingSuits[this.roundTrump] >= 2) { //if 2 or more trump in hand scans them and plays lowest
+              var holding = [];
+              var trumpvalues = [];
+              for (var i=0; i < countingSuits[this.roundTrump]; i++) {
+                holding.push(arr3.indexOf(this.roundTrump))
+                arr3.splice(arr3.indexOf(this.roundTrump), 1, 'X')
+                var index = holding[i]
+                trumpvalues.push(TRUMP_VALUE_MAP[this.getPlayer()[index].firstElementChild.dataset.value.slice(0,2).trim()])
+              }
+              var min = Math.min(...trumpvalues);
+              var minIndex = trumpvalues.indexOf(min)
+              var realIndex = holding[minIndex] //index of lowest trump in hand
+              var lowtrump = TRUMP_VALUE_MAP[this.getPlayer()[realIndex].firstElementChild.dataset.value.slice(0,2).trim()]
+                document.getElementById(this.getPlayer()[realIndex].id).style.gridRowStart=x;
+                document.getElementById(this.getPlayer()[realIndex].id).style.gridColumnStart=y;
+                console.log(`Computer ${this.leader} throws lowest of their trump ${lowtrump} and trumps!`);
+                this.roundValues.push(lowtrump);
+                return
+          }
+        } else { //two suited not lead suit or trump
+            var offsuitvalues = [];
+            for (var i=0; i<arr3.length; i++) {
+              offsuitvalues.push(CARD_VALUE_MAP[this.getPlayer()[i].firstElementChild.dataset.value.slice(0,2).trim()])
+            }
+            var min = Math.min(...offsuitvalues);
+            var index = offsuitvalues.indexOf(min);
+            document.getElementById(this.getPlayer()[index].id).style.gridRowStart=x;
+            document.getElementById(this.getPlayer()[index].id).style.gridColumnStart=y;
+            console.log(`Computer ${this.leader} throws a low off suit card`);
+            this.roundValues.push(min);
+            return
+        }
+
+
       } else {
         indexes.splice(indexes.indexOf(this.indexOfLeft), 1); //was an index probelm but solved.
         // console.log(indexes+' should have removed left bauer index');
@@ -569,8 +696,8 @@ class Euchre {
         this.roundValues.push(newArr[0]);
         return
       }
-      else if (newArr.length > 1 ) {
-        var highCard = 0;
+      else if (newArr.length > 1 ) { //need to fix over trumping partner's trump lead if they have it won situation
+        var highCard = 0; // i.e. cpu1 lead left and cpu3 trumped with right...
         var index = 0;
         for (var i=0; i < newArr.length; i++) {
           if (newArr[i] > highCard) {
@@ -588,9 +715,6 @@ class Euchre {
   }
   else {
     console.log(`Computer ${this.leader} doesn't have to follow suit`);
-    //if partner is taking trick throw off, else throw low trump
-    //if trump is lead and partner doesn't have it won throw higher trump otherwise
-    //throw a lowest off suit card / try and short suit.
     if (this.roundValues.length === 1 && this.leadingSuit === this.roundTrump) {
       // cpu doesn't have trump. short suit yourself if low card or throw lowest card
       var arr3 = [];
@@ -602,29 +726,470 @@ class Euchre {
         countingSuits[num] = countingSuits[num] ? countingSuits[num] + 1: 1; //counting # of ea suit in hand
       }
       //check value from oject to find if only 1 suit, get index, and play if "low card" Q or lower
-      
+      var arrkey = Object.keys(countingSuits) //array of keys in countingSuits
+      // console.log('arrkey '+arrkey);
+      for (var key in countingSuits) {
+      // for (var i=0; i < arrkey.length; i++ ) {
+        // var key = arrkey[i];
+        if (countingSuits[key] === 1) {
+          // var index = arr3.indexOf(arrkey[i]);
+          var index = arr3.indexOf(key)
+          var lowcard = CARD_VALUE_MAP[this.getPlayer()[index].firstElementChild.dataset.value.slice(0,2).trim()]
+          if (lowcard <= 12) {
+            document.getElementById(this.getPlayer()[index].id).style.gridRowStart=x;
+            document.getElementById(this.getPlayer()[index].id).style.gridColumnStart=y;
+            console.log(`Computer ${this.leader} throws ${lowcard} and short suits themself!`);
+            this.roundValues.push(lowcard);
+            return
+          }
+        }
+        //else if two suited throw lower of the two cards
+        else if (countingSuits[key] === 2) {
+          function getKeyByValue(object, value) {
+            return Object.keys(object).find(key => object[key] === value);
+          }
+          var suitOfTwoCards = getKeyByValue(countingSuits, 2)
+          var firstCard = arr3.indexOf(suitOfTwoCards)
+          arr3.splice(firstCard, 1, 'X')
+          var secondCard = arr3.indexOf(suitOfTwoCards);
+          var c1value = CARD_VALUE_MAP[this.getPlayer()[firstCard].firstElementChild.dataset.value.slice(0,2).trim()]
+          var c2value = CARD_VALUE_MAP[this.getPlayer()[secondCard].firstElementChild.dataset.value.slice(0,2).trim()]
+          if (c1value < c2value) {
+            document.getElementById(this.getPlayer()[firstCard].id).style.gridRowStart=x;
+            document.getElementById(this.getPlayer()[firstCard].id).style.gridColumnStart=y;
+            console.log(`Computer ${this.leader} throws lower of two cards`);
+            this.roundValues.push(c1value);
+            return
+          }
+          else {
+            document.getElementById(this.getPlayer()[secondCard].id).style.gridRowStart=x;
+            document.getElementById(this.getPlayer()[secondCard].id).style.gridColumnStart=y;
+            console.log(`Computer ${this.leader} throws lower of two cards`);
+            this.roundValues.push(c2value);
+            return
+          }
+        } else if (countingSuits[key] === 3) {
+          function getKeyByValue(object, value) {
+            return Object.keys(object).find(key => object[key] === value);
+          }
+          var suitOfThreeCards = getKeyByValue(countingSuits, 3)
+          var firstCard = arr3.indexOf(suitOfThreeCards)
+          arr3.splice(firstCard, 1, 'X')
+          var secondCard = arr3.indexOf(suitOfThreeCards);
+          arr3.splice(secondCard, 1, 'X')
+          var thirdCard = arr3.indexOf(suitOfThreeCards)
+          var c1value = CARD_VALUE_MAP[this.getPlayer()[firstCard].firstElementChild.dataset.value.slice(0,2).trim()]
+          var c2value = CARD_VALUE_MAP[this.getPlayer()[secondCard].firstElementChild.dataset.value.slice(0,2).trim()]
+          var c3value = CARD_VALUE_MAP[this.getPlayer()[thirdCard].firstElementChild.dataset.value.slice(0,2).trim()]
+          if (c1value < c2value && c1value < c3value) {
+            document.getElementById(this.getPlayer()[firstCard].id).style.gridRowStart=x;
+            document.getElementById(this.getPlayer()[firstCard].id).style.gridColumnStart=y;
+            console.log(`Computer ${this.leader} throws lower of three cards`);
+            this.roundValues.push(c1value);
+            return
+          } else if (c2value < c1value && c2value < c3value) {
+            document.getElementById(this.getPlayer()[secondCard].id).style.gridRowStart=x;
+            document.getElementById(this.getPlayer()[secondCard].id).style.gridColumnStart=y;
+            console.log(`Computer ${this.leader} throws lower of three cards`);
+            this.roundValues.push(c2value);
+            return
+          }
+          else {
+            document.getElementById(this.getPlayer()[thirdCard].id).style.gridRowStart=x;
+            document.getElementById(this.getPlayer()[thirdCard].id).style.gridColumnStart=y;
+            console.log(`Computer ${this.leader} throws lower of three cards`);
+            this.roundValues.push(c3value);
+            return
+          }
+        } else { // the below logic is bad, just random filler for now
+          for (var i=0; i<arr3.length; i++) {
+            document.getElementById(this.getPlayer()[i].id).style.gridRowStart=x;
+            document.getElementById(this.getPlayer()[i].id).style.gridColumnStart=y;
+            this.roundValues.push(CARD_VALUE_MAP[this.getPlayer()[i].firstElementChild.dataset.value.slice(0,2).trim()])
+            return
+          }
+        }
+      }
+      // }
 
 
     } else if (this.roundValues.length === 1 && this.leadingSuit !== this.roundTrump) {
-        //throw low trump
+        //throw low trump if you have trump, otherwise throw low
+        var arr3 = [];
+        var suits = ["♠", "♣", "♥", "♦"]
+        this.getPlayer().forEach(card => arr3.push(card.firstElementChild.dataset.value.slice(2).trim()))
+        var countingSuits = {};
+        for (var i = 0; i < arr3.length; i++) {
+          var num = arr3[i];
+          countingSuits[num] = countingSuits[num] ? countingSuits[num] + 1: 1; //counting # of ea suit in hand
+        }
+        if (countingSuits.hasOwnProperty(this.roundTrump) === true) {
+          if (countingSuits[this.roundTrump] === 1) {
+            var index = arr3.indexOf(this.roundTrump)
+            var lowtrump = TRUMP_VALUE_MAP[this.getPlayer()[index].firstElementChild.dataset.value.slice(0,2).trim()]
+              document.getElementById(this.getPlayer()[index].id).style.gridRowStart=x;
+              document.getElementById(this.getPlayer()[index].id).style.gridColumnStart=y;
+              console.log(`Computer ${this.leader} throws ${lowtrump} and trumps!`);
+              this.roundValues.push(lowtrump);
+              return
+          } else if (countingSuits[this.roundTrump] >= 2) { //if 2 or more trump in hand scans them and plays lowest
+              var holding = [];
+              var trumpvalues = [];
+              for (var i=0; i < countingSuits[this.roundTrump]; i++) {
+                holding.push(arr3.indexOf(this.roundTrump))
+                arr3.splice(arr3.indexOf(this.roundTrump), 1, 'X')
+                var index = holding[i]
+                trumpvalues.push(TRUMP_VALUE_MAP[this.getPlayer()[index].firstElementChild.dataset.value.slice(0,2).trim()])
+              }
+              var min = Math.min(...trumpvalues);
+              var minIndex = trumpvalues.indexOf(min)
+              var realIndex = holding[minIndex] //index of lowest trump in hand
+              var lowtrump = TRUMP_VALUE_MAP[this.getPlayer()[realIndex].firstElementChild.dataset.value.slice(0,2).trim()]
+                document.getElementById(this.getPlayer()[realIndex].id).style.gridRowStart=x;
+                document.getElementById(this.getPlayer()[realIndex].id).style.gridColumnStart=y;
+                console.log(`Computer ${this.leader} throws lowest of their trump ${lowtrump} and trumps!`);
+                this.roundValues.push(lowtrump);
+                return
+          }
+        } else { //two suited not lead suit or trump
+            var offsuitvalues = [];
+            for (var i=0; i<arr3.length; i++) {
+              offsuitvalues.push(CARD_VALUE_MAP[this.getPlayer()[i].firstElementChild.dataset.value.slice(0,2).trim()])
+            }
+            var min = Math.min(...offsuitvalues);
+            var index = offsuitvalues.indexOf(min);
+            document.getElementById(this.getPlayer()[index].id).style.gridRowStart=x;
+            document.getElementById(this.getPlayer()[index].id).style.gridColumnStart=y;
+            console.log(`Computer ${this.leader} throws a low off suit card`);
+            this.roundValues.push(min);
+            return
+        }
 
-    } else if (this.roundValues.length === 2 && this.roundValues[0] > this.roundValues[1] && this.leadingSuit !== this.roundTrump) {
-      //if partner is winning trick throw off/ try to short suit, else trump
+    } else if (this.roundValues.length === 2 && this.roundValues[0] > this.roundValues[1]) {
+      //if partner is winning trick throw off/ try to short suit, else low trump
+      var arr3 = [];
+      var suits = ["♠", "♣", "♥", "♦"]
+      this.getPlayer().forEach(card => arr3.push(card.firstElementChild.dataset.value.slice(2).trim()))
+      var countingSuits = {};
+      for (var i = 0; i < arr3.length; i++) {
+        var num = arr3[i];
+        countingSuits[num] = countingSuits[num] ? countingSuits[num] + 1: 1; //counting # of ea suit in hand
+      }
+      var arrkey = Object.keys(countingSuits) //array of keys in countingSuits
+        //if less than or equal to queen, play low trump
+        if (countingSuits.hasOwnProperty(this.roundTrump) === true && this.roundValues[0] <= 12) {
+          if (countingSuits[this.roundTrump] === 1) {
+            var index = arr3.indexOf(this.roundTrump)
+            var lowtrump = TRUMP_VALUE_MAP[this.getPlayer()[index].firstElementChild.dataset.value.slice(0,2).trim()]
+              document.getElementById(this.getPlayer()[index].id).style.gridRowStart=x;
+              document.getElementById(this.getPlayer()[index].id).style.gridColumnStart=y;
+              console.log(`Computer ${this.leader} throws ${lowtrump} and trumps!`);
+              this.roundValues.push(lowtrump);
+              return
+          } else if (countingSuits[this.roundTrump] >= 2) { //if 2 or more trump in hand scans them and plays lowest
+              var holding = [];
+              var trumpvalues = [];
+              for (var i=0; i < countingSuits[this.roundTrump]; i++) {
+                holding.push(arr3.indexOf(this.roundTrump))
+                arr3.splice(arr3.indexOf(this.roundTrump), 1, 'X')
+                var index = holding[i]
+                trumpvalues.push(TRUMP_VALUE_MAP[this.getPlayer()[index].firstElementChild.dataset.value.slice(0,2).trim()])
+              }
+              var min = Math.min(...trumpvalues);
+              var minIndex = trumpvalues.indexOf(min)
+              var realIndex = holding[minIndex] //index of lowest trump in hand
+              var lowtrump = TRUMP_VALUE_MAP[this.getPlayer()[realIndex].firstElementChild.dataset.value.slice(0,2).trim()]
+                document.getElementById(this.getPlayer()[realIndex].id).style.gridRowStart=x;
+                document.getElementById(this.getPlayer()[realIndex].id).style.gridColumnStart=y;
+                console.log(`Computer ${this.leader} throws lowest of their trump ${lowtrump} and trumps!`);
+                this.roundValues.push(lowtrump);
+                return
+          }
+      } else {
+        //need to try and short suit/throw a low card
+        for (var key in countingSuits) { //there is an issue where left is not accounted for
+          if (countingSuits[key] === 1 && countingSuits[key] !== this.roundTrump) {
+            var a = arr3.indexOf(key)
+            var avalue = CARD_VALUE_MAP[this.getPlayer()[a].firstElementChild.dataset.value.slice(0,2).trim()]
+            if (avalue <= 12) {
+              document.getElementById(this.getPlayer()[a].id).style.gridRowStart=x;
+              document.getElementById(this.getPlayer()[a].id).style.gridColumnStart=y;
+              console.log(`Computer ${this.leader} throws ${avalue} off since partner is taking trick!`);
+              this.roundValues.push(avalue);
+              return
+            }
+          } else if (countingSuits[key] === 2) {
+            function getKeyByValue(object, value) {
+              return Object.keys(object).find(key => object[key] === value);
+            }
+            var suitOfTwoCards = getKeyByValue(countingSuits, 2)
+            var firstCard = arr3.indexOf(suitOfTwoCards)
+            arr3.splice(firstCard, 1, 'X')
+            var secondCard = arr3.indexOf(suitOfTwoCards);
+            var c1value = CARD_VALUE_MAP[this.getPlayer()[firstCard].firstElementChild.dataset.value.slice(0,2).trim()]
+            var c2value = CARD_VALUE_MAP[this.getPlayer()[secondCard].firstElementChild.dataset.value.slice(0,2).trim()]
+            if (c1value < c2value) {
+              document.getElementById(this.getPlayer()[firstCard].id).style.gridRowStart=x;
+              document.getElementById(this.getPlayer()[firstCard].id).style.gridColumnStart=y;
+              console.log(`Computer ${this.leader} throws lower of two cards`);
+              this.roundValues.push(c1value);
+              return
+            } else {
+              document.getElementById(this.getPlayer()[secondCard].id).style.gridRowStart=x;
+              document.getElementById(this.getPlayer()[secondCard].id).style.gridColumnStart=y;
+              console.log(`Computer ${this.leader} throws lower of two cards`);
+              this.roundValues.push(c2value);
+              return
+            }
+          } else if (countingSuits[key] === 3) {
+            function getKeyByValue(object, value) {
+              return Object.keys(object).find(key => object[key] === value);
+            }
+            var suitOfThreeCards = getKeyByValue(countingSuits, 3)
+            var firstCard = arr3.indexOf(suitOfThreeCards)
+            arr3.splice(firstCard, 1, 'X')
+            var secondCard = arr3.indexOf(suitOfThreeCards);
+            arr3.splice(secondCard, 1, 'X')
+            var thirdCard = arr3.indexOf(suitOfThreeCards)
+            var c1value = CARD_VALUE_MAP[this.getPlayer()[firstCard].firstElementChild.dataset.value.slice(0,2).trim()]
+            var c2value = CARD_VALUE_MAP[this.getPlayer()[secondCard].firstElementChild.dataset.value.slice(0,2).trim()]
+            var c3value = CARD_VALUE_MAP[this.getPlayer()[thirdCard].firstElementChild.dataset.value.slice(0,2).trim()]
+            if (c1value < c2value && c1value < c3value) {
+              document.getElementById(this.getPlayer()[firstCard].id).style.gridRowStart=x;
+              document.getElementById(this.getPlayer()[firstCard].id).style.gridColumnStart=y;
+              console.log(`Computer ${this.leader} throws lower of three cards`);
+              this.roundValues.push(c1value);
+              return
+            } else if (c2value < c1value && c2value < c3value) {
+              document.getElementById(this.getPlayer()[secondCard].id).style.gridRowStart=x;
+              document.getElementById(this.getPlayer()[secondCard].id).style.gridColumnStart=y;
+              console.log(`Computer ${this.leader} throws lower of three cards`);
+              this.roundValues.push(c2value);
+              return
+            }
+            else {
+              document.getElementById(this.getPlayer()[thirdCard].id).style.gridRowStart=x;
+              document.getElementById(this.getPlayer()[thirdCard].id).style.gridColumnStart=y;
+              console.log(`Computer ${this.leader} throws lower of three cards`);
+              this.roundValues.push(c3value);
+              return
+            }
+          }
 
-    } else if (this.roundValues.length === 3 && this.roundValues[1] > (this.roundValues[0] && this.roundValues[2])) {
+          }
+        }
+      } else if (this.roundValues.length === 2 && this.roundValues[0] < this.roundValues[1]) {
+          //throw low trump if you have trump, otherwise throw low
+          var arr3 = [];
+          var suits = ["♠", "♣", "♥", "♦"]
+          this.getPlayer().forEach(card => arr3.push(card.firstElementChild.dataset.value.slice(2).trim()))
+          var countingSuits = {};
+          for (var i = 0; i < arr3.length; i++) {
+            var num = arr3[i];
+            countingSuits[num] = countingSuits[num] ? countingSuits[num] + 1: 1; //counting # of ea suit in hand
+          }
+          if (countingSuits.hasOwnProperty(this.roundTrump) === true) {
+            if (countingSuits[this.roundTrump] === 1) {
+              var index = arr3.indexOf(this.roundTrump)
+              var lowtrump = TRUMP_VALUE_MAP[this.getPlayer()[index].firstElementChild.dataset.value.slice(0,2).trim()]
+                document.getElementById(this.getPlayer()[index].id).style.gridRowStart=x;
+                document.getElementById(this.getPlayer()[index].id).style.gridColumnStart=y;
+                console.log(`Computer ${this.leader} throws ${lowtrump} and trumps!`);
+                this.roundValues.push(lowtrump);
+                return
+            } else if (countingSuits[this.roundTrump] >= 2) { //if 2 or more trump in hand scans them and plays lowest
+                var holding = [];
+                var trumpvalues = [];
+                for (var i=0; i < countingSuits[this.roundTrump]; i++) {
+                  holding.push(arr3.indexOf(this.roundTrump))
+                  arr3.splice(arr3.indexOf(this.roundTrump), 1, 'X')
+                  var index = holding[i]
+                  trumpvalues.push(TRUMP_VALUE_MAP[this.getPlayer()[index].firstElementChild.dataset.value.slice(0,2).trim()])
+                }
+                var min = Math.min(...trumpvalues);
+                var minIndex = trumpvalues.indexOf(min)
+                var realIndex = holding[minIndex] //index of lowest trump in hand
+                var lowtrump = TRUMP_VALUE_MAP[this.getPlayer()[realIndex].firstElementChild.dataset.value.slice(0,2).trim()]
+                  document.getElementById(this.getPlayer()[realIndex].id).style.gridRowStart=x;
+                  document.getElementById(this.getPlayer()[realIndex].id).style.gridColumnStart=y;
+                  console.log(`Computer ${this.leader} throws lowest of their trump ${lowtrump} and trumps!`);
+                  this.roundValues.push(lowtrump);
+                  return
+            }
+          } else { //two suited not lead suit or trump
+              var offsuitvalues = [];
+              for (var i=0; i<arr3.length; i++) {
+                offsuitvalues.push(CARD_VALUE_MAP[this.getPlayer()[i].firstElementChild.dataset.value.slice(0,2).trim()])
+              }
+              var min = Math.min(...offsuitvalues);
+              var index = offsuitvalues.indexOf(min);
+              document.getElementById(this.getPlayer()[index].id).style.gridRowStart=x;
+              document.getElementById(this.getPlayer()[index].id).style.gridColumnStart=y;
+              console.log(`Computer ${this.leader} throws a low off suit card`);
+              this.roundValues.push(min);
+              return
+          }
+
+      }else if (this.roundValues.length === 3 && this.roundValues[1] > (this.roundValues[0] && this.roundValues[2])) {
       //same rules as above
-
+      var arr3 = [];
+      var suits = ["♠", "♣", "♥", "♦"]
+      this.getPlayer().forEach(card => arr3.push(card.firstElementChild.dataset.value.slice(2).trim()))
+      var countingSuits = {};
+      for (var i = 0; i < arr3.length; i++) {
+        var num = arr3[i];
+        countingSuits[num] = countingSuits[num] ? countingSuits[num] + 1: 1; //counting # of ea suit in hand
+      }
+      var arrkey = Object.keys(countingSuits) //array of keys in countingSuits
+        //if less than or equal to queen, play low trump
+        if (countingSuits.hasOwnProperty(this.roundTrump) === true) {
+          if (countingSuits[this.roundTrump] === 1) {
+            var index = arr3.indexOf(this.roundTrump)
+            var lowtrump = TRUMP_VALUE_MAP[this.getPlayer()[index].firstElementChild.dataset.value.slice(0,2).trim()]
+              document.getElementById(this.getPlayer()[index].id).style.gridRowStart=x;
+              document.getElementById(this.getPlayer()[index].id).style.gridColumnStart=y;
+              console.log(`Computer ${this.leader} throws ${lowtrump} and trumps!`);
+              this.roundValues.push(lowtrump);
+              return
+          } else if (countingSuits[this.roundTrump] >= 2) { //if 2 or more trump in hand scans them and plays lowest
+              var holding = [];
+              var trumpvalues = [];
+              for (var i=0; i < countingSuits[this.roundTrump]; i++) {
+                holding.push(arr3.indexOf(this.roundTrump))
+                arr3.splice(arr3.indexOf(this.roundTrump), 1, 'X')
+                var index = holding[i]
+                trumpvalues.push(TRUMP_VALUE_MAP[this.getPlayer()[index].firstElementChild.dataset.value.slice(0,2).trim()])
+              }
+              var min = Math.min(...trumpvalues);
+              var minIndex = trumpvalues.indexOf(min)
+              var realIndex = holding[minIndex] //index of lowest trump in hand
+              var lowtrump = TRUMP_VALUE_MAP[this.getPlayer()[realIndex].firstElementChild.dataset.value.slice(0,2).trim()]
+                document.getElementById(this.getPlayer()[realIndex].id).style.gridRowStart=x;
+                document.getElementById(this.getPlayer()[realIndex].id).style.gridColumnStart=y;
+                console.log(`Computer ${this.leader} throws lowest of their trump ${lowtrump} and trumps!`);
+                this.roundValues.push(lowtrump);
+                return
+          }
+      } else {
+        //need to try and short suit/throw a low card
+        for (var key in countingSuits) {
+          if (countingSuits[key] === 1 && countingSuits[key] !== this.roundTrump) {
+            var a = arr3.indexOf(key)
+            var avalue = CARD_VALUE_MAP[this.getPlayer()[a].firstElementChild.dataset.value.slice(0,2).trim()]
+            if (avalue <= 12) {
+              document.getElementById(this.getPlayer()[a].id).style.gridRowStart=x;
+              document.getElementById(this.getPlayer()[a].id).style.gridColumnStart=y;
+              console.log(`Computer ${this.leader} throws ${avalue} off since partner is taking trick!`);
+              this.roundValues.push(avalue);
+              return
+            }
+          } else if (countingSuits[key] === 2) {
+            function getKeyByValue(object, value) {
+              return Object.keys(object).find(key => object[key] === value);
+            }
+            var suitOfTwoCards = getKeyByValue(countingSuits, 2)
+            var firstCard = arr3.indexOf(suitOfTwoCards)
+            arr3.splice(firstCard, 1, 'X')
+            var secondCard = arr3.indexOf(suitOfTwoCards);
+            var c1value = CARD_VALUE_MAP[this.getPlayer()[firstCard].firstElementChild.dataset.value.slice(0,2).trim()]
+            var c2value = CARD_VALUE_MAP[this.getPlayer()[secondCard].firstElementChild.dataset.value.slice(0,2).trim()]
+            if (c1value < c2value) {
+              document.getElementById(this.getPlayer()[firstCard].id).style.gridRowStart=x;
+              document.getElementById(this.getPlayer()[firstCard].id).style.gridColumnStart=y;
+              console.log(`Computer ${this.leader} throws lower of two cards`);
+              this.roundValues.push(c1value);
+              return
+            } else {
+              document.getElementById(this.getPlayer()[secondCard].id).style.gridRowStart=x;
+              document.getElementById(this.getPlayer()[secondCard].id).style.gridColumnStart=y;
+              console.log(`Computer ${this.leader} throws lower of two cards`);
+              this.roundValues.push(c2value);
+              return
+            }
+          } else if (countingSuits[key] === 3) {
+            function getKeyByValue(object, value) {
+              return Object.keys(object).find(key => object[key] === value);
+            }
+            var suitOfThreeCards = getKeyByValue(countingSuits, 3)
+            var firstCard = arr3.indexOf(suitOfThreeCards)
+            arr3.splice(firstCard, 1, 'X')
+            var secondCard = arr3.indexOf(suitOfThreeCards);
+            arr3.splice(secondCard, 1, 'X')
+            var thirdCard = arr3.indexOf(suitOfThreeCards)
+            var c1value = CARD_VALUE_MAP[this.getPlayer()[firstCard].firstElementChild.dataset.value.slice(0,2).trim()]
+            var c2value = CARD_VALUE_MAP[this.getPlayer()[secondCard].firstElementChild.dataset.value.slice(0,2).trim()]
+            var c3value = CARD_VALUE_MAP[this.getPlayer()[thirdCard].firstElementChild.dataset.value.slice(0,2).trim()]
+            if (c1value < c2value && c1value < c3value) {
+              document.getElementById(this.getPlayer()[firstCard].id).style.gridRowStart=x;
+              document.getElementById(this.getPlayer()[firstCard].id).style.gridColumnStart=y;
+              console.log(`Computer ${this.leader} throws lower of three cards`);
+              this.roundValues.push(c1value);
+              return
+            } else if (c2value < c1value && c2value < c3value) {
+              document.getElementById(this.getPlayer()[secondCard].id).style.gridRowStart=x;
+              document.getElementById(this.getPlayer()[secondCard].id).style.gridColumnStart=y;
+              console.log(`Computer ${this.leader} throws lower of three cards`);
+              this.roundValues.push(c2value);
+              return
+            }
+            else {
+              document.getElementById(this.getPlayer()[thirdCard].id).style.gridRowStart=x;
+              document.getElementById(this.getPlayer()[thirdCard].id).style.gridColumnStart=y;
+              console.log(`Computer ${this.leader} throws lower of three cards`);
+              this.roundValues.push(c3value);
+              return
+            }
+          }
     }
-
+  }
+} else { //bad logic below but want to just play a card everytime
+  var arr3 = [];
+  this.getPlayer().forEach(card => arr3.push(card.firstElementChild.dataset.value.slice(2).trim()))
+  if (arr3[0] === this.roundTrump) {
+    var cardvalue = TRUMP_VALUE_MAP[this.getPlayer()[0].firstElementChild.dataset.value.slice(0,2).trim()]
+    document.getElementById(this.getPlayer()[0].id).style.gridRowStart=x;
+    document.getElementById(this.getPlayer()[0].id).style.gridColumnStart=y;
+    console.log(`Computer ${this.leader} arbitrarily throws first card in hand`);
+    this.roundValues.push(cardvalue);
     return
-
+  } else {
+      var cardvalue = CARD_VALUE_MAP[this.getPlayer()[0].firstElementChild.dataset.value.slice(0,2).trim()]
+      document.getElementById(this.getPlayer()[0].id).style.gridRowStart=x;
+      document.getElementById(this.getPlayer()[0].id).style.gridColumnStart=y;
+      console.log(`Computer ${this.leader} arbitrarily throws first card in hand`);
+      this.roundValues.push(cardvalue);
+      return
+  }
+    }
+    //repeating code to try and get card played everytime no matter what
+    var arr3 = [];
+    this.getPlayer().forEach(card => arr3.push(card.firstElementChild.dataset.value.slice(2).trim()))
+    if (arr3[0] === this.roundTrump) {
+      var cardvalue = TRUMP_VALUE_MAP[this.getPlayer()[0].firstElementChild.dataset.value.slice(0,2).trim()]
+      document.getElementById(this.getPlayer()[0].id).style.gridRowStart=x;
+      document.getElementById(this.getPlayer()[0].id).style.gridColumnStart=y;
+      console.log(`Computer ${this.leader} arbitrarily throws first card in hand`);
+      this.roundValues.push(cardvalue);
+      return
+    } else {
+        var cardvalue = CARD_VALUE_MAP[this.getPlayer()[0].firstElementChild.dataset.value.slice(0,2).trim()]
+        document.getElementById(this.getPlayer()[0].id).style.gridRowStart=x;
+        document.getElementById(this.getPlayer()[0].id).style.gridColumnStart=y;
+        console.log(`Computer ${this.leader} arbitrarily throws first card in hand`);
+        this.roundValues.push(cardvalue);
+        return
+      }
   }
 }
 
 
 
   isLeader() {
-    return this.leader = this.realdealer + 1;
+    if (this.realdealer === 3) {
+      return this.leader = 0;
+    } else {
+      return this.leader = this.realdealer + 1;
+    }
   }
   isLeft() {
     //used for computer to figure out if the J in their hand is considered a trump.
@@ -700,6 +1265,21 @@ class Euchre {
     }
   }
 
+  getDealer() {
+    if (this.realdealer === 0) {
+      return this.playerCardsArray
+    }
+    else if (this.realdealer === 1) {
+      return this.cpuOneCardsArray
+    }
+    else if (this.realdealer === 2) {
+      return this.cpuTwoCardsArray
+    }
+    else {
+      return this.cpuThreeCardsArray
+    }
+  }
+
 
   getPlayer() {
     //used for inputing into orderUp, isleft, isright, isSideAce,  functions so
@@ -728,58 +1308,376 @@ class Euchre {
     return this.leader
   }
 
+  play() {
+    console.log('who is leader during my turn? leader is '+this.leader);
+    // this.leader = 0;
+    text.innerText = 'Your move!'
+    var arroop = [];
+    var holding = [];
+    this.getPlayer().forEach(card => arroop.push(card.firstElementChild.dataset.value.slice(2).trim()))
+
+    function getAllIndexes (arr, val) {
+      var indexes = [], i = -1;
+      while ((i = arr.indexOf(val, i+1)) != -1){
+        indexes.push(i);
+      }
+
+      return indexes;
+    }
+
+    console.log('array of suits '+arroop);
+    var playableCards = getAllIndexes(arroop, this.leadingSuit);
+    console.log(playableCards);
+    if (this.isLeft() === true && this.leadingSuit === this.roundTrump) {
+      //add to left index playableCards array
+      playableCards.push(this.indexOfLeft);
+    }
+    //if player picks up trump, maker sure card is added properly to their hand and cpu's hand
+    //might need to add p1 c1 classes etc...
+    if (playableCards.length >= 1) {
+      //player must follow suit
+      playerCardSlot1.classList.add('disabled')
+      playerCardSlot2.classList.add('disabled')
+      playerCardSlot3.classList.add('disabled')
+      playerCardSlot4.classList.add('disabled')
+      playerCardSlot5.classList.add('disabled')
+        if (playableCards.includes(0)) {
+          playerCardSlot1.classList.remove('disabled')
+          playerCardSlot1.classList.toggle('cselected');
+        } if (playableCards.includes(1)) {
+          playerCardSlot2.classList.remove('disabled')
+          playerCardSlot2.classList.toggle('cselected');
+        } if (playableCards.includes(2)) {
+          playerCardSlot3.classList.remove('disabled')
+          playerCardSlot3.classList.toggle('cselected');
+        } if (playableCards.includes(3)) {
+          playerCardSlot4.classList.remove('disabled')
+          playerCardSlot4.classList.toggle('cselected');
+        } if (playableCards.includes(4)){
+          playerCardSlot5.classList.remove('disabled')
+          playerCardSlot5.classList.toggle('cselected');
+        }
+    } else {
+      console.log('user does not have to follow suit');
+      //need to make it work if cards have been played...
+      playerCardSlot1.classList.toggle('cselected');
+      playerCardSlot2.classList.toggle('cselected');
+      playerCardSlot3.classList.toggle('cselected');
+      playerCardSlot4.classList.toggle('cselected');
+      playerCardSlot5.classList.toggle('cselected');
+
+      playerCardSlot1.classList.remove('disabled')
+      playerCardSlot2.classList.remove('disabled')
+      playerCardSlot3.classList.remove('disabled')
+      playerCardSlot4.classList.remove('disabled')
+      playerCardSlot5.classList.remove('disabled')
+    }
+    console.log('card one is ' +this.getPlayer()[0].id)
+    //user plays card (need to disable toggle for the other selected/unselected cards)
+    playerCardSlot1.addEventListener('click', () => {
+      playerCardSlot1.classList.add('disabled')
+      playerCardSlot1.classList.remove('cselected')
+
+      playerCardSlot2.classList.remove('cselected')
+      playerCardSlot3.classList.remove('cselected')
+      playerCardSlot4.classList.remove('cselected')
+      playerCardSlot5.classList.remove('cselected')
+
+
+      document.getElementById(this.getPlayer()[0].id).style.gridRowStart=6;
+      document.getElementById(this.getPlayer()[0].id).style.gridColumnStart=5;
+      console.log(`Player throws a card`);
+      //Need to account for if the user plays the left
+      if (this.getPlayer()[0].firstElementChild.dataset.value.slice(2).trim() === this.roundTrump) {
+        var pcardvalue = TRUMP_VALUE_MAP[this.getPlayer()[0].firstElementChild.dataset.value.slice(0,2).trim()]
+      } else {
+        var pcardvalue = CARD_VALUE_MAP[this.getPlayer()[0].firstElementChild.dataset.value.slice(0,2).trim()]
+      }
+      this.roundValues.push(pcardvalue);
+      console.log('dealer is '+this.realdealer); //if this.realdealer === 0 return this.isRoundWinner
+      return this.isRoundWinner()
+    })
+
+    playerCardSlot2.addEventListener('click', () => {
+      playerCardSlot2.classList.add('disabled')
+      playerCardSlot2.classList.remove('cselected')
+
+      playerCardSlot1.classList.remove('cselected')
+      playerCardSlot3.classList.remove('cselected')
+      playerCardSlot4.classList.remove('cselected')
+      playerCardSlot5.classList.remove('cselected')
+
+      document.getElementById(this.getPlayer()[1].id).style.gridRowStart=6;
+      document.getElementById(this.getPlayer()[1].id).style.gridColumnStart=5;
+      console.log(`Player throws a card`);
+      //Need to account for if the user plays the left
+      if (this.getPlayer()[1].firstElementChild.dataset.value.slice(2).trim() === this.roundTrump) {
+        var pcardvalue = TRUMP_VALUE_MAP[this.getPlayer()[1].firstElementChild.dataset.value.slice(0,2).trim()]
+      } else {
+        var pcardvalue = CARD_VALUE_MAP[this.getPlayer()[1].firstElementChild.dataset.value.slice(0,2).trim()]
+      }
+      this.roundValues.push(pcardvalue);
+      return this.isRoundWinner()
+    })
+
+    playerCardSlot3.addEventListener('click', () => {
+      playerCardSlot3.classList.add('disabled')
+      playerCardSlot3.classList.remove('cselected')
+
+      playerCardSlot1.classList.remove('cselected')
+      playerCardSlot2.classList.remove('cselected')
+      playerCardSlot4.classList.remove('cselected')
+      playerCardSlot5.classList.remove('cselected')
+
+      document.getElementById(this.getPlayer()[2].id).style.gridRowStart=6;
+      document.getElementById(this.getPlayer()[2].id).style.gridColumnStart=5;
+      console.log(`Player throws a card`);
+      //Need to account for if the user plays the left
+      if (this.getPlayer()[2].firstElementChild.dataset.value.slice(2).trim() === this.roundTrump) {
+        var pcardvalue = TRUMP_VALUE_MAP[this.getPlayer()[2].firstElementChild.dataset.value.slice(0,2).trim()]
+      } else {
+        var pcardvalue = CARD_VALUE_MAP[this.getPlayer()[2].firstElementChild.dataset.value.slice(0,2).trim()]
+      }
+      this.roundValues.push(pcardvalue);
+      return this.isRoundWinner()
+    })
+
+    playerCardSlot4.addEventListener('click', () => {
+      playerCardSlot4.classList.add('disabled')
+      playerCardSlot4.classList.remove('cselected')
+
+      playerCardSlot1.classList.remove('cselected')
+      playerCardSlot2.classList.remove('cselected')
+      playerCardSlot3.classList.remove('cselected')
+      playerCardSlot5.classList.remove('cselected')
+
+      document.getElementById(this.getPlayer()[3].id).style.gridRowStart=6;
+      document.getElementById(this.getPlayer()[3].id).style.gridColumnStart=5;
+      console.log(`Player throws a card`);
+      //Need to account for if the user plays the left
+      if (this.getPlayer()[3].firstElementChild.dataset.value.slice(2).trim() === this.roundTrump) {
+        var pcardvalue = TRUMP_VALUE_MAP[this.getPlayer()[3].firstElementChild.dataset.value.slice(0,2).trim()]
+      } else {
+        var pcardvalue = CARD_VALUE_MAP[this.getPlayer()[3].firstElementChild.dataset.value.slice(0,2).trim()]
+      }
+      this.roundValues.push(pcardvalue);
+      return this.isRoundWinner()
+    })
+
+    playerCardSlot5.addEventListener('click', () => {
+      playerCardSlot5.classList.add('disabled')
+      playerCardSlot5.classList.remove('cselected')
+
+      playerCardSlot1.classList.remove('cselected')
+      playerCardSlot2.classList.remove('cselected')
+      playerCardSlot3.classList.remove('cselected')
+      playerCardSlot4.classList.remove('cselected')
+
+      document.getElementById(this.getPlayer()[4].id).style.gridRowStart=6;
+      document.getElementById(this.getPlayer()[4].id).style.gridColumnStart=5;
+      console.log(`Player throws a card`);
+      //Need to account for if the user plays the left
+      if (this.getPlayer()[4].firstElementChild.dataset.value.slice(2).trim() === this.roundTrump) {
+        var pcardvalue = TRUMP_VALUE_MAP[this.getPlayer()[4].firstElementChild.dataset.value.slice(0,2).trim()]
+      } else {
+        var pcardvalue = CARD_VALUE_MAP[this.getPlayer()[4].firstElementChild.dataset.value.slice(0,2).trim()]
+      }
+      this.roundValues.push(pcardvalue);
+      return this.isRoundWinner()
+    })
+
+
+
+
+}
+
+
+
+
   playerPickUp() {
-    text.innerText = 'Choose a card to replace.';
+    text.innerText = 'Click on card to pick it up.';
     upcard.classList.toggle('selected');
+    upcard.addEventListener('click', () => {
+      this.playerDiscard();
+    })
+}
+
+
+  playerDiscard() {
+
+    text.innerText = 'Click on card you want to replace.';
     playerCardSlot1.classList.toggle('cselected');
     playerCardSlot2.classList.toggle('cselected');
     playerCardSlot3.classList.toggle('cselected');
     playerCardSlot4.classList.toggle('cselected');
     playerCardSlot5.classList.toggle('cselected');
-    upcard.addEventListener('click', () => this.playerDiscard());
+
+    playerCardSlot1.addEventListener('click', () => {
+      playerCardSlot1.innerHTML = '';
+      upcard.classList.remove('deck');
+      upcard.classList.add('player-card-slot1', 'p1');
+      upcard.style.display = 'none';
+      upcard.classList.add('disabled')
+      // upcard.removeAttribute('id')
+      // upcard.setAttribute('id', 'p1c1')
+
+
+      var newDiv = document.createElement('div');
+      newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
+      newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
+      newDiv.dataset.value = upcard.firstElementChild.dataset.value;
+      playerCardSlot1.appendChild(newDiv);
+      // console.log('player array card one '+this.playerCardsArray[0].firstElementChild.dataset.value);
+
+      playerCardSlot1.classList.add('disabled')
+      playerCardSlot2.classList.add('disabled')
+      playerCardSlot3.classList.add('disabled')
+      playerCardSlot4.classList.add('disabled')
+      playerCardSlot5.classList.add('disabled')
+      this.stopAnimation();
+      return this.playHand(); //this runs but will need conditional depending on who leads
+      //depends on order of play
+      // return this.playHand();
+    })
+
+    playerCardSlot2.addEventListener('click', () => {
+      playerCardSlot2.innerHTML = '';
+      upcard.style.display = 'none';
+      upcard.classList.add('disabled')
+
+      var newDiv = document.createElement('div');
+      newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
+      newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
+      newDiv.dataset.value = upcard.firstElementChild.dataset.value;
+      playerCardSlot2.appendChild(newDiv);
+
+      playerCardSlot1.classList.add('disabled')
+      playerCardSlot2.classList.add('disabled')
+      playerCardSlot3.classList.add('disabled')
+      playerCardSlot4.classList.add('disabled')
+      playerCardSlot5.classList.add('disabled')
+      this.stopAnimation();
+      return this.playHand();
+
+    })
+
+    playerCardSlot3.addEventListener('click', () => {
+      playerCardSlot3.innerHTML = '';
+      upcard.style.display = 'none';
+      upcard.classList.add('disabled')
+
+      var newDiv = document.createElement('div');
+      newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
+      newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
+      newDiv.dataset.value = upcard.firstElementChild.dataset.value;
+      playerCardSlot3.appendChild(newDiv);
+
+      playerCardSlot1.classList.add('disabled')
+      playerCardSlot2.classList.add('disabled')
+      playerCardSlot3.classList.add('disabled')
+      playerCardSlot4.classList.add('disabled')
+      playerCardSlot5.classList.add('disabled')
+      this.stopAnimation();
+      return this.playHand();
+
+    })
+
+
+    playerCardSlot4.addEventListener('click', () => {
+      playerCardSlot4.innerHTML = '';
+      upcard.style.display = 'none';
+      upcard.classList.add('disabled')
+
+      var newDiv = document.createElement('div');
+      newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
+      newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
+      newDiv.dataset.value = upcard.firstElementChild.dataset.value;
+      playerCardSlot4.appendChild(newDiv);
+
+      playerCardSlot1.classList.add('disabled')
+      playerCardSlot2.classList.add('disabled')
+      playerCardSlot3.classList.add('disabled')
+      playerCardSlot4.classList.add('disabled')
+      playerCardSlot5.classList.add('disabled')
+      this.stopAnimation();
+      return this.playHand();
+    })
+
+
+    playerCardSlot5.addEventListener('click', () => {
+      playerCardSlot5.innerHTML = '';
+      upcard.style.display = 'none';
+      upcard.classList.add('disabled')
+
+      var newDiv = document.createElement('div');
+      newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
+      newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
+      newDiv.dataset.value = upcard.firstElementChild.dataset.value;
+      playerCardSlot5.appendChild(newDiv);
+
+      playerCardSlot1.classList.add('disabled')
+      playerCardSlot2.classList.add('disabled')
+      playerCardSlot3.classList.add('disabled')
+      playerCardSlot4.classList.add('disabled')
+      playerCardSlot5.classList.add('disabled')
+      this.stopAnimation();
+      return this.playHand();
+    })
 
   }
 
-  playerDiscard() {
-    playerCardSlot1.addEventListener('click', () => playerCardSlot1.innerHTML = '');
-    playerCardSlot1.addEventListener('click', () => upcard.classList.remove('deck'));
-    playerCardSlot1.addEventListener('click', () => upcard.classList.add('player-card-slot1'));
-    playerCardSlot1.addEventListener('click', () => this.stopAnimation());
-    //how to fix multi-selection after trump pickup ?
-
-    playerCardSlot2.addEventListener('click', () => playerCardSlot2.innerHTML = '');
-    playerCardSlot2.addEventListener('click', () => upcard.classList.remove('deck'));
-    playerCardSlot2.addEventListener('click', () => upcard.classList.add('player-card-slot2'));
-    playerCardSlot2.addEventListener('click', () => this.stopAnimation());
-
-    playerCardSlot3.addEventListener('click', () => playerCardSlot3.innerHTML = '');
-    playerCardSlot3.addEventListener('click', () => upcard.classList.remove('deck'));
-    playerCardSlot3.addEventListener('click', () => upcard.classList.add('player-card-slot3'));
-    playerCardSlot3.addEventListener('click', () => this.stopAnimation());
-
-    playerCardSlot4.addEventListener('click', () => playerCardSlot4.innerHTML = '');
-    playerCardSlot4.addEventListener('click', () => upcard.classList.remove('deck'));
-    playerCardSlot4.addEventListener('click', () => upcard.classList.add('player-card-slot4'));
-    playerCardSlot4.addEventListener('click', () => this.stopAnimation());
-
-    playerCardSlot5.addEventListener('click', () => playerCardSlot5.innerHTML = '');
-    playerCardSlot5.addEventListener('click', () => upcard.classList.remove('deck'));
-    playerCardSlot5.addEventListener('click', () => upcard.classList.add('player-card-slot5'));
-    playerCardSlot5.addEventListener('click', () => this.stopAnimation());
-  }
 
 
-  // isRoundWinner(playerCard, c1Card){
-  //   return CARD_VALUE_MAP[playerCard.value] > CARD_VALUE_MAP[c1Card.value];
-  // would check for trump values here...
-  // }
   stopAnimation() {
     playerCardSlot1.classList.toggle('cselected');
     playerCardSlot2.classList.toggle('cselected');
     playerCardSlot3.classList.toggle('cselected');
     playerCardSlot4.classList.toggle('cselected');
     playerCardSlot5.classList.toggle('cselected');
-    return true
+
+  }
+
+  isRoundWinner() {
+    console.log(this.roundValues);
+    var max = Math.max(...this.roundValues);
+    var index = this.roundValues.indexOf(max);
+    this.isLeader();
+    console.log('max index is '+index);
+    console.log('leader is '+ this.leader);
+    if (this.leader === 0 && index === 0) {
+      text.innerText = 'You take the trick!'
+      this.team1tricks += 1;
+      team1tricks.innerText = this.team1tricks;
+    } else if (this.leader === 0 && index === 1) {
+      text.innerText = 'Computer 1 takes the trick!'
+      this.team2tricks +=1;
+      team2tricks.innerText = this.team2tricks;
+    } else if (this.leader === 0 && index === 2) {
+      text.innerText = 'Your partner takes the trick!'
+      this.team1tricks += 1;
+      team1tricks.innerText = this.team1tricks;
+    } else if (this.leader === 0 && index === 3) {
+      text.innerText = 'Computer 3 takes the trick!'
+      this.team2tricks +=1;
+      team2tricks.innerText = this.team2tricks;
+    } else if (this.leader === 1 && index === 0) {
+      text.innerText = 'Computer 1 takes the trick!'
+      this.team2tricks +=1;
+      team2tricks.innerText = this.team2tricks;
+    } else if (this.leader === 1 && index === 1) {
+      text.innerText = 'Your partner takes the trick!'
+      this.team1tricks += 1;
+      team1tricks.innerText = this.team1tricks;
+    } else if (this.leader === 1 && index === 2) {
+      text.innerText = 'Computer 3 takes the trick!'
+      this.team2tricks +=1;
+      team2tricks.innerText = this.team2tricks;
+    } else if (this.leader === 1 && index === 3) {
+      text.innerText = 'You take the trick!'
+      this.team1tricks += 1;
+      team1tricks.innerText = this.team1tricks;
+    }
+
   }
 
   trickTaker() {
@@ -788,84 +1686,7 @@ class Euchre {
 
 }
 
-function stopAnimation() {
-  playerCardSlot1.classList.toggle('cselected');
-  playerCardSlot2.classList.toggle('cselected');
-  playerCardSlot3.classList.toggle('cselected');
-  playerCardSlot4.classList.toggle('cselected');
-  playerCardSlot5.classList.toggle('cselected');
-}
 
-function discard() {
-  // if a card is clicked, clear the element ---function discard(elemendID) {(document.getElementById(elementid).innerHTML ='';)}
-  //and replace the element's old content with the upcard.
-
-  playerCardSlot1.addEventListener('click', () => playerCardSlot1.innerHTML = '');
-  playerCardSlot1.addEventListener('click', () => upcard.classList.remove('deck'));
-  playerCardSlot1.addEventListener('click', () => upcard.classList.add('player-card-slot1'));
-  playerCardSlot1.addEventListener('click', () => stopAnimation());
-  // playerCardSlot1.addEventListener('click', () => upcard = [playerCardSlot1, playerCardSlot1=upcard][0]);
-  // console.log('after swap');
-  // console.log(playerCardSlot1.innerHTML);
-  // console.log(playerCardSlot1.dataset.value);
-  // console.log(upcard);
-  //still might need to figure out how to assign upcard to a different cardslot
-
-  playerCardSlot2.addEventListener('click', () => playerCardSlot2.innerHTML = '');
-  playerCardSlot2.addEventListener('click', () => upcard.classList.remove('deck'));
-  playerCardSlot2.addEventListener('click', () => upcard.classList.add('player-card-slot2'));
-  playerCardSlot2.addEventListener('click', () => stopAnimation());
-
-  playerCardSlot3.addEventListener('click', () => playerCardSlot3.innerHTML = '');
-  playerCardSlot3.addEventListener('click', () => upcard.classList.remove('deck'));
-  playerCardSlot3.addEventListener('click', () => upcard.classList.add('player-card-slot3'));
-  playerCardSlot3.addEventListener('click', () => stopAnimation());
-
-  playerCardSlot4.addEventListener('click', () => playerCardSlot4.innerHTML = '');
-  playerCardSlot4.addEventListener('click', () => upcard.classList.remove('deck'));
-  playerCardSlot4.addEventListener('click', () => upcard.classList.add('player-card-slot4'));
-  playerCardSlot4.addEventListener('click', () => stopAnimation());
-
-  playerCardSlot5.addEventListener('click', () => playerCardSlot5.innerHTML = '');
-  playerCardSlot5.addEventListener('click', () => upcard.classList.remove('deck'));
-  playerCardSlot5.addEventListener('click', () => upcard.classList.add('player-card-slot5'));
-  playerCardSlot5.addEventListener('click', () => stopAnimation());
-}
-
-function orderUp() {
-
-  text.innerText = 'Pick it up or pass?'
-
-  upcard.addEventListener('click', () => upcard.classList.toggle('selected'));
-  upcard.addEventListener('click', changeText);
-  upcard.addEventListener('click', () => playerCardSlot1.classList.toggle('cselected'));
-  upcard.addEventListener('click', () => playerCardSlot2.classList.toggle('cselected'));
-  upcard.addEventListener('click', () => playerCardSlot3.classList.toggle('cselected'));
-  upcard.addEventListener('click', () => playerCardSlot4.classList.toggle('cselected'));
-  upcard.addEventListener('click', () => playerCardSlot5.classList.toggle('cselected'));
-  upcard.addEventListener('click', () => discard()); //discard function is called when upcard(deck) is clicked
-  console.log(playerCardSlot1.innerHTML)
-}
-
-
-const changeText = () => {
-  const text = document.querySelector('.text');
-  text.innerText = 'Choose a card to discard.';
-}
-
-const revertText = () => {
-  const text = document.querySelector('.text');
-  text.innerText = 'Pick it up or pass?';
-}
-
-text.innerText = 'Pick it up or pass?';
-
-function pass() {
-  passButton.addEventListener('click', () => passButton.style.display='none');
-  passButton.addEventListener('click', () => upcard.style.display='none');
-  // passButton.addEventListener('click', () => upcard.classList.toggle('back-of-card'));
-  // text.innerText = 'You pass. Waiting for Computer';
-}
 
 function ready() {
   //add overlays to start game and when user wins/loses game later
