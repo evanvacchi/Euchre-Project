@@ -45,6 +45,7 @@ var cp3CardSlot4 = document.querySelector('.cp3slotcard4');
 var cp3CardSlot5 = document.querySelector('.cp3slotcard5');
 
 const passButton = document.querySelector('.pass');
+const selectTrump = document.querySelector('.box');
 var upcard = document.querySelector('.deck');
 const text = document.querySelector('.text');
 var team1tricks = document.querySelector('#trick1score')
@@ -139,7 +140,6 @@ class Euchre {
     this.score2 = document.getElementById('score2');
     this.deck = new Deck(); //i.e. game.deck.shuffle();
     this.cards = new Card(); // I don't think I need to use this, but it's possible.
-    this.busy = true;
 
     // this.team1 = document.getElementsByClassName('t1');
     // this.team2 = document.getElementsByClassName('t2');
@@ -199,9 +199,6 @@ class Euchre {
   }
 
   startRound(){
-    //pick trump, computer/player pick it up or pass first round & second round
-    // this.trump = orderUp().data-value
-      text.innerText = 'waiting for computer...';
       this.roundTrump = upcard.firstElementChild.dataset.value.slice(2).trim();
       this.roundValues = [];
       this.leadValue = 0
@@ -209,45 +206,155 @@ class Euchre {
       this.team2tricks = 0;
       team1tricks.innerText = this.team1tricks
       team2tricks.innerText = this.team2tricks
-      for (var i=0; i< 4; i++) {
-        if (this.orderUp() === false) { //if someone passes then next player
-          continue
-        } else {
-          if (this.realdealer === 0) { //player is dealer
+      //dealer is random at start of game.
+      passButton.style.display = 'none';
+      passButton.classList.add('disabled')
+      selectTrump.style.display = 'none';
+      selectTrump.classList.add('disabled')
+
+      if (this.dealer === 0) { // when player is dealer
+        for (var i=0; i< 4; i++) { //computers 1-3 can say pick it up or pass...
+          if (i === 3) { //player decides to pickup or pass
+            text.innerText = 'Pick it up or pass?'
+            // console.log('Pick it up or pass?');
+            passButton.style.display = 'flex';
+            passButton.classList.remove('disabled')
+            passButton.addEventListener('click', () => {
+              passButton.style.display = 'none';
+              passButton.classList.add('disabled')
+              this.secondBid();
+            })
             this.playerPickUp();
-            //need to change this.playerPickUp & this.playerDiscard()
-            //so program does not automatically call the other
-              // this.isLeader();
-              // setTimeout(() => {
-              //   this.cpuLead();
-              //   this.nextPlayer();
-              // }, 2500);
-              // setTimeout(() => {
-              //   this.cpuPlay();
-              //   this.nextPlayer();
-              // }, 5000);
-              // setTimeout(() => {
-              //   this.cpuPlay();
-              //   this.nextPlayer();
-              // }, 7500);
-              // setTimeout(() => {
-              //   this.play();
-              // }, 10000);
-
-              // setTimeout(() => {
-              //   this.isRoundWinner();
-              // }, 12000);
-
-          } else {
-            this.cpuPickUp(); //figure out what computer is dealer then call user play accordingly
+            break;
+          } else if (this.orderUp() === false) { //if cpu passes then next cpu
+            // setTimeout(() => {
+            //   text.innerText = `Player ${i+1} passes!`
+            // }, 1500)
+            continue
+          } else { //computer has you pick up trump
+              text.innerText = 'Click on card to pick it up.';
+              this.playerPickUp();
+              break;
           }
+        }
+
+      } //elif statements here regarding if player is in the other 3 positions...
+
+}
+
+  nextRound() {
+    console.log('Next Round!');
+    this.roundValues = [];
+    if (this.leader === 0) {
+      this.play();
+      setTimeout(() => {
+        this.nextPlayer();
+        this.cpuLead();
+        this.nextPlayer();
+      }, 2500);
+      setTimeout(() => {
+        this.cpuPlay();
+        this.nextPlayer();
+      }, 5000);
+      setTimeout(() => {
+        this.cpuPlay();
+        this.isRoundWinner();
+      }, 7500);
+    } else if (this.leader === 1) {
+
+      this.playHand();
+
+    } else if (this.leader === 2) {
+
+    } else if (this.leader === 3) {
+
+    }
+  }
+
+  secondBid() { //called when player clicks "pass" button or computer dealer passes after startRound
+    //checks who the dealer is and goes around again to determine trump.
+    //flip down upcard no matter who is dealer
+    console.log('Second Round Bidding');
+    // console.log('leader is '+this.leader);
+    upcard.style.display = 'none';
+    upcard.classList.add('disabled')
+    // this.nextPlayer();
+    // console.log('leader is '+this.leader);
+
+    if (this.dealer === 0) {
+      this.leader = 1;
+      // setTimeout(() => {
+      //   text.innerText = 'You pass & flip down trump!'
+      // }, 1500);
+
+      for (var i=0; i<4; i++) {
+        if (i === 3) {
+          console.log('Screw the dealer!');
+          this.playerPickTrump();
+          break;
+        } else if (this.cpuCallTrump() === false) { //computer passes again
+          console.log(`Computer ${this.leader} passes again`);
+          // setTimeout(() => {
+          //   text.innerText = `Player ${i} passes!`
+          // }, 1500)
+          //continue
+        } else { // computer picks a suit
+          // text.innerText = `Player ${i+1} calls trump!`
+          return this.cpuCallTrump();
+          console.log('trump is '+this.roundTrump);
           break;
         }
       }
-}
+    } //other dealer positions
+
+  }
+
+  cpuCallTrump() { //called during secondBid only
+    // ***issue is that computer 0 (player is calling trump before cpu1 and player shouldn't be run in this)
+    var arr = [];
+    this.getPlayer().forEach(card => arr.push(card.firstElementChild.dataset.value.slice(2).trim()))
+    var counts = {};
+    arr.forEach(function(x) {counts[x] = (counts[x] || 0) + 1})
+    var potential = ["♠", "♣", "♥", "♦"];
+    potential.splice(potential.indexOf(this.roundTrump), 1); //eliminates first round trump
+    //note: below trump conditionals don't account for left bauer
+    if (counts[potential[0]] >= 3) {
+      console.log(`Computer ${this.leader} calls ${potential[0]} as trump!`);
+      return this.roundTrump = potential[0];
+    } else if (counts[potential[1]] >= 3) {
+      console.log(`Computer ${this.leader} calls ${potential[1]} as trump!`);
+      return this.roundTrump = potential[1];
+    } else if (counts[potential[2]] >= 3) {
+      console.log(`Computer ${this.leader} calls ${potential[2]} as trump!`);
+      return this.roundTrump = potential[2];
+    } else if (this.leader === 0) { //only computers use this function
+      this.pass();
+      return false;
+    }
+    else {
+      this.pass();
+      // console.log('this player is false: '+this.leader);
+      return false;
+    }
+  }
+
+  screwTheDealer() { //called during secondBid only
+    //computer that is dealer* must pick a trump, it cannot be the trump from startRound
+    console.log(`Computer ${this.leader} randomly picks trump`);
+    var possibleTrump = ["♠", "♣", "♥", "♦"];
+    possibleTrump.splice(possibleTrump.indexOf(this.roundTrump, 1))
+    return this.roundTrump = possibleTrump[Math.floor(Math.random()*possibleTrump.length)]
+  }
+
+  playerPickTrump() { //called during secondBid only
+    //player must pick trump with selectTrump button
+    selectTrump.style.display = 'block';
+    selectTrump.classList.remove('disabled')
+
+    return
+  }
 
   orderUp() {
-    //this.leader needs to be replaced with player? how to determine which player is deciding?
       var arr = [];
       this.getPlayer().forEach(card => arr.push(card.firstElementChild.dataset.value.slice(2).trim())); //puts suits of cards in array
       var counts = {};
@@ -275,6 +382,9 @@ class Euchre {
         text.innerText = `Player ${this.leader} orders it up!`;
         console.log(`Computer ${this.leader} Orders it up!!!`);
         console.log('trump is '+this.roundTrump);
+        setTimeout(() => {
+          text.innerText = `Computer ${this.leader} Orders it up!!!`
+        }, 2000);
         this.orderer = this.leader;
         return this.roundTrump
         // return true;
@@ -1301,6 +1411,7 @@ class Euchre {
   nextPlayer() {
     //if pass() or play() or cpulead() is called, increment currentplayer aka "leader" by 1 if 3 reset to player 0...
     //start function can reset variable to have the round's true leader (person left of dealer).
+    console.log('next player was called');
     this.leader++
     if (this.leader > 3) {
       this.leader = 0;
@@ -1375,7 +1486,7 @@ class Euchre {
     console.log('card one is ' +this.getPlayer()[0].id)
     //user plays card (need to disable toggle for the other selected/unselected cards)
     playerCardSlot1.addEventListener('click', () => {
-      playerCardSlot1.classList.add('disabled')
+      // playerCardSlot1.classList.add('disabled')
       playerCardSlot1.classList.remove('cselected')
 
       playerCardSlot2.classList.remove('cselected')
@@ -1383,7 +1494,7 @@ class Euchre {
       playerCardSlot4.classList.remove('cselected')
       playerCardSlot5.classList.remove('cselected')
 
-
+      console.log(`on clicking first card, Player ${this.leader} plays a card`);
       document.getElementById(this.getPlayer()[0].id).style.gridRowStart=6;
       document.getElementById(this.getPlayer()[0].id).style.gridColumnStart=5;
       console.log(`Player throws a card`);
@@ -1493,18 +1604,73 @@ class Euchre {
 
 
 
-
   playerPickUp() {
-    text.innerText = 'Click on card to pick it up.';
     upcard.classList.toggle('selected');
     upcard.addEventListener('click', () => {
       this.playerDiscard();
+      passButton.style.display = 'none';
+      passButton.classList.add('disabled')
+      upcard.classList.add('disabled')
     })
+    // text.innerText = 'Click on card to pick it up.';
+    // var listener = function() {
+    //   passButton.style.display = 'none';
+    //   passButton.classList.add('disabled')
+    //   upcard.removeEventListener('click', listener, true);
+    //   this.playerDiscard();
+    // }
+    // upcard.addEventListener('click', listener, true);
 }
+
+  clickHandler() {
+    playerCardSlot1.innerHTML = '';
+    upcard.classList.add('disabled')
+    upcard.style.display = 'none';
+
+
+    var newDiv = document.createElement('div');
+    newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
+    newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
+    newDiv.dataset.value = upcard.firstElementChild.dataset.value;
+    playerCardSlot1.appendChild(newDiv);
+
+
+    playerCardSlot1.classList.add('disabled')
+    playerCardSlot2.classList.add('disabled')
+    playerCardSlot3.classList.add('disabled')
+    playerCardSlot4.classList.add('disabled')
+    playerCardSlot5.classList.add('disabled')
+
+    this.stopAnimation();
+    return this.playHand();
+}
+
+  clickHandler2() {
+    playerCardSlot2.innerHTML = '';
+    upcard.style.display = 'none';
+    upcard.classList.add('disabled')
+
+
+    var newDiv = document.createElement('div');
+    newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
+    newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
+    newDiv.dataset.value = upcard.firstElementChild.dataset.value;
+    playerCardSlot1.appendChild(newDiv);
+
+
+    playerCardSlot1.classList.add('disabled')
+    playerCardSlot2.classList.add('disabled')
+    playerCardSlot3.classList.add('disabled')
+    playerCardSlot4.classList.add('disabled')
+    playerCardSlot5.classList.add('disabled')
+
+    this.stopAnimation();
+    return this.playHand();
+  }
 
 
   playerDiscard() {
-
+    // upcard.removeEventListener('click', this.listener, true);
     text.innerText = 'Click on card you want to replace.';
     playerCardSlot1.classList.toggle('cselected');
     playerCardSlot2.classList.toggle('cselected');
@@ -1512,117 +1678,123 @@ class Euchre {
     playerCardSlot4.classList.toggle('cselected');
     playerCardSlot5.classList.toggle('cselected');
 
-    playerCardSlot1.addEventListener('click', () => {
-      playerCardSlot1.innerHTML = '';
-      upcard.classList.remove('deck');
-      upcard.classList.add('player-card-slot1', 'p1');
-      upcard.style.display = 'none';
-      upcard.classList.add('disabled')
-      // upcard.removeAttribute('id')
-      // upcard.setAttribute('id', 'p1c1')
+    //if player card x is clicked run the click event
 
-
-      var newDiv = document.createElement('div');
-      newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
-      newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
-      newDiv.dataset.value = upcard.firstElementChild.dataset.value;
-      playerCardSlot1.appendChild(newDiv);
+    playerCardSlot1.addEventListener('click', this.clickHandler());
+    // playerCardSlot2.addEventListener('click', this.clickHandler2());
+    // playerCardSlot1.removeEventListener('click', this.clickHandler(), true);
+      // playerCardSlot1.innerHTML = '';
+      // console.log(playerCardSlot1);
+      // console.log(this.playerCardsArray[0]);
+      // console.log(this.playerCardsArray);
+      // upcard.classList.remove('deck');
+      // upcard.style.display = 'none';
+      // upcard.classList.add('disabled')
+      //
+      // // this.leader = 0;
+      // console.log('id is '+this.getPlayer()[0].id);
+      // var newDiv = document.createElement('div');
+      // newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
+      // newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
+      // newDiv.dataset.value = upcard.firstElementChild.dataset.value;
+      // playerCardSlot1.appendChild(newDiv);
       // console.log('player array card one '+this.playerCardsArray[0].firstElementChild.dataset.value);
-
-      playerCardSlot1.classList.add('disabled')
-      playerCardSlot2.classList.add('disabled')
-      playerCardSlot3.classList.add('disabled')
-      playerCardSlot4.classList.add('disabled')
-      playerCardSlot5.classList.add('disabled')
-      this.stopAnimation();
-      return this.playHand(); //this runs but will need conditional depending on who leads
+      //
+      //
+      // playerCardSlot1.classList.add('disabled')
+      // playerCardSlot2.classList.add('disabled')
+      // playerCardSlot3.classList.add('disabled')
+      // playerCardSlot4.classList.add('disabled')
+      // playerCardSlot5.classList.add('disabled')
+      // this.stopAnimation();
+      // return this.playHand(); //this runs but will need conditional depending on who leads
       //depends on order of play
       // return this.playHand();
-    })
-
-    playerCardSlot2.addEventListener('click', () => {
-      playerCardSlot2.innerHTML = '';
-      upcard.style.display = 'none';
-      upcard.classList.add('disabled')
-
-      var newDiv = document.createElement('div');
-      newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
-      newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
-      newDiv.dataset.value = upcard.firstElementChild.dataset.value;
-      playerCardSlot2.appendChild(newDiv);
-
-      playerCardSlot1.classList.add('disabled')
-      playerCardSlot2.classList.add('disabled')
-      playerCardSlot3.classList.add('disabled')
-      playerCardSlot4.classList.add('disabled')
-      playerCardSlot5.classList.add('disabled')
-      this.stopAnimation();
-      return this.playHand();
-
-    })
-
-    playerCardSlot3.addEventListener('click', () => {
-      playerCardSlot3.innerHTML = '';
-      upcard.style.display = 'none';
-      upcard.classList.add('disabled')
-
-      var newDiv = document.createElement('div');
-      newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
-      newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
-      newDiv.dataset.value = upcard.firstElementChild.dataset.value;
-      playerCardSlot3.appendChild(newDiv);
-
-      playerCardSlot1.classList.add('disabled')
-      playerCardSlot2.classList.add('disabled')
-      playerCardSlot3.classList.add('disabled')
-      playerCardSlot4.classList.add('disabled')
-      playerCardSlot5.classList.add('disabled')
-      this.stopAnimation();
-      return this.playHand();
-
-    })
 
 
-    playerCardSlot4.addEventListener('click', () => {
-      playerCardSlot4.innerHTML = '';
-      upcard.style.display = 'none';
-      upcard.classList.add('disabled')
-
-      var newDiv = document.createElement('div');
-      newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
-      newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
-      newDiv.dataset.value = upcard.firstElementChild.dataset.value;
-      playerCardSlot4.appendChild(newDiv);
-
-      playerCardSlot1.classList.add('disabled')
-      playerCardSlot2.classList.add('disabled')
-      playerCardSlot3.classList.add('disabled')
-      playerCardSlot4.classList.add('disabled')
-      playerCardSlot5.classList.add('disabled')
-      this.stopAnimation();
-      return this.playHand();
-    })
-
-
-    playerCardSlot5.addEventListener('click', () => {
-      playerCardSlot5.innerHTML = '';
-      upcard.style.display = 'none';
-      upcard.classList.add('disabled')
-
-      var newDiv = document.createElement('div');
-      newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
-      newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
-      newDiv.dataset.value = upcard.firstElementChild.dataset.value;
-      playerCardSlot5.appendChild(newDiv);
-
-      playerCardSlot1.classList.add('disabled')
-      playerCardSlot2.classList.add('disabled')
-      playerCardSlot3.classList.add('disabled')
-      playerCardSlot4.classList.add('disabled')
-      playerCardSlot5.classList.add('disabled')
-      this.stopAnimation();
-      return this.playHand();
-    })
+    // playerCardSlot2.addEventListener('click', () => {
+    //   playerCardSlot2.innerHTML = '';
+    //   upcard.style.display = 'none';
+    //   upcard.classList.add('disabled')
+    //
+    //   var newDiv = document.createElement('div');
+    //   newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
+    //   newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
+    //   newDiv.dataset.value = upcard.firstElementChild.dataset.value;
+    //   playerCardSlot2.appendChild(newDiv);
+    //
+    //   playerCardSlot1.classList.add('disabled')
+    //   playerCardSlot2.classList.add('disabled')
+    //   playerCardSlot3.classList.add('disabled')
+    //   playerCardSlot4.classList.add('disabled')
+    //   playerCardSlot5.classList.add('disabled')
+    //   this.stopAnimation();
+    //   return this.playHand();
+    //
+    // })
+    //
+    // playerCardSlot3.addEventListener('click', () => {
+    //   playerCardSlot3.innerHTML = '';
+    //   upcard.style.display = 'none';
+    //   upcard.classList.add('disabled')
+    //
+    //   var newDiv = document.createElement('div');
+    //   newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
+    //   newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
+    //   newDiv.dataset.value = upcard.firstElementChild.dataset.value;
+    //   playerCardSlot3.appendChild(newDiv);
+    //
+    //   playerCardSlot1.classList.add('disabled')
+    //   playerCardSlot2.classList.add('disabled')
+    //   playerCardSlot3.classList.add('disabled')
+    //   playerCardSlot4.classList.add('disabled')
+    //   playerCardSlot5.classList.add('disabled')
+    //   this.stopAnimation();
+    //   return this.playHand();
+    //
+    // })
+    //
+    //
+    // playerCardSlot4.addEventListener('click', () => {
+    //   playerCardSlot4.innerHTML = '';
+    //   upcard.style.display = 'none';
+    //   upcard.classList.add('disabled')
+    //
+    //   var newDiv = document.createElement('div');
+    //   newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
+    //   newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
+    //   newDiv.dataset.value = upcard.firstElementChild.dataset.value;
+    //   playerCardSlot4.appendChild(newDiv);
+    //
+    //   playerCardSlot1.classList.add('disabled')
+    //   playerCardSlot2.classList.add('disabled')
+    //   playerCardSlot3.classList.add('disabled')
+    //   playerCardSlot4.classList.add('disabled')
+    //   playerCardSlot5.classList.add('disabled')
+    //   this.stopAnimation();
+    //   return this.playHand();
+    // })
+    //
+    //
+    // playerCardSlot5.addEventListener('click', () => {
+    //   playerCardSlot5.innerHTML = '';
+    //   upcard.style.display = 'none';
+    //   upcard.classList.add('disabled')
+    //
+    //   var newDiv = document.createElement('div');
+    //   newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
+    //   newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
+    //   newDiv.dataset.value = upcard.firstElementChild.dataset.value;
+    //   playerCardSlot5.appendChild(newDiv);
+    //
+    //   playerCardSlot1.classList.add('disabled')
+    //   playerCardSlot2.classList.add('disabled')
+    //   playerCardSlot3.classList.add('disabled')
+    //   playerCardSlot4.classList.add('disabled')
+    //   playerCardSlot5.classList.add('disabled')
+    //   this.stopAnimation();
+    //   return this.playHand();
+    // })
 
   }
 
@@ -1642,42 +1814,52 @@ class Euchre {
     var max = Math.max(...this.roundValues);
     var index = this.roundValues.indexOf(max);
     this.isLeader();
-    console.log('max index is '+index);
-    console.log('leader is '+ this.leader);
+    // console.log('max index is '+index);
+    // console.log('leader is '+ this.leader);
     if (this.leader === 0 && index === 0) {
       text.innerText = 'You take the trick!'
       this.team1tricks += 1;
       team1tricks.innerText = this.team1tricks;
+      // this.leader = 0;
+      // return this.nextRound();
+      return
     } else if (this.leader === 0 && index === 1) {
       text.innerText = 'Computer 1 takes the trick!'
       this.team2tricks +=1;
       team2tricks.innerText = this.team2tricks;
+      return
     } else if (this.leader === 0 && index === 2) {
       text.innerText = 'Your partner takes the trick!'
       this.team1tricks += 1;
       team1tricks.innerText = this.team1tricks;
+      return
     } else if (this.leader === 0 && index === 3) {
       text.innerText = 'Computer 3 takes the trick!'
       this.team2tricks +=1;
       team2tricks.innerText = this.team2tricks;
+      return
     } else if (this.leader === 1 && index === 0) {
       text.innerText = 'Computer 1 takes the trick!'
       this.team2tricks +=1;
       team2tricks.innerText = this.team2tricks;
+      return
     } else if (this.leader === 1 && index === 1) {
       text.innerText = 'Your partner takes the trick!'
       this.team1tricks += 1;
       team1tricks.innerText = this.team1tricks;
+      return
     } else if (this.leader === 1 && index === 2) {
       text.innerText = 'Computer 3 takes the trick!'
       this.team2tricks +=1;
       team2tricks.innerText = this.team2tricks;
+      return
     } else if (this.leader === 1 && index === 3) {
       text.innerText = 'You take the trick!'
       this.team1tricks += 1;
       team1tricks.innerText = this.team1tricks;
+      // this.leader = 0;
+      // return this.nextRound();
     }
-
   }
 
   trickTaker() {
