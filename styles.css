@@ -5,14 +5,61 @@
 body {
   margin: 0;
   display: grid;
-  grid-template-columns: repeat(9, 4rem);
-  grid-template-rows: repeat(9, 4rem);
+  grid-template-columns: repeat(9, 4.2rem);
+  grid-template-rows: repeat(9, 4.2rem);
   gap: 1rem;
   justify-content: center;
   padding-top: 1rem;
   padding-bottom: 1rem;
   border: 1px solid black;
   background:  darkgreen;
+}
+
+.box{
+  height: 100%;
+  width: 100%;
+  /* display: flex; */
+  justify-content: center;
+  align-items: center;
+  grid-column-start: 6;
+  grid-row-start: 9;
+  /* cursor: pointer; */
+  border-radius: .5rem;
+  border: 1px solid black;
+  user-select: none;
+  background: white;
+}
+
+.btn{
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  overflow: hidden;
+  border-radius: 5px;
+}
+
+.btn:hover{
+  /* opacity: .7; */
+  border: 1px solid black;
+}
+
+.clubs{
+  margin-top: 5px;
+  margin-left: 4px;
+}
+.spades{
+  margin-top: 5px;
+  margin-left: 4px;
+}
+.hearts{
+margin-top: 5px;
+margin-left: 5px;
+color: red;
+}
+.diamonds{
+margin-top: 5px;
+margin-left: 5px;
+color: red;
 }
 
 #passbtn{
@@ -172,6 +219,17 @@ body {
   animation: cborder-pulsate 1.2s infinite;
 }
 
+.player-card-slot1.disabled, .player-card-slot2.disabled, .player-card-slot3.disabled,
+.player-card-slot4.disabled, .player-card-slot5.disabled{
+  pointer-events: none;
+}
+
+.disabled{
+  pointer-events: none;
+}
+
+
+
 #cpu1 {
   grid-column-start: 1;
   grid-row-start: 5;
@@ -326,6 +384,48 @@ background: white;
 }
 
 #score2 {
+  grid-column-start: 1;
+  grid-row-end: 0;
+}
+
+.trick1, .trick2 {
+  /* white-space: pre; */
+  display: block;
+  height: 100%;
+  width: 100%;
+  border: 1px solid black;
+  align-items: center;
+  justify-content: center;
+  border-radius: .5rem;
+  user-select: none;
+  background: white;
+  font-size: 50%;
+  /* overflow: hidden; */
+  white-space: nowrap;
+  /* padding-top: 2px; */
+}
+
+h3 {
+  padding-left: 2px;
+  overflow: auto;
+}
+
+#trick1score, #trick2score{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 25px;
+  padding-bottom: 10px;
+
+
+}
+
+.trick1 {
+  grid-column-start: 9;
+  grid-row-end: 10;
+}
+
+.trick2 {
   grid-column-start: 2;
   grid-row-end: 0;
 }
