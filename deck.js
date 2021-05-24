@@ -245,6 +245,7 @@ class Euchre {
   nextRound() {
     console.log('Next Round!');
     this.roundValues = [];
+    // p1PlayedId.
     if (this.leader === 0) {
       this.play();
       setTimeout(() => {
@@ -1506,6 +1507,7 @@ class Euchre {
       }
       this.roundValues.push(pcardvalue);
       console.log('dealer is '+this.realdealer); //if this.realdealer === 0 return this.isRoundWinner
+      this.p1PlayedId = this.getPlayer()[0].id
       return this.isRoundWinner()
     })
 
@@ -1528,6 +1530,7 @@ class Euchre {
         var pcardvalue = CARD_VALUE_MAP[this.getPlayer()[1].firstElementChild.dataset.value.slice(0,2).trim()]
       }
       this.roundValues.push(pcardvalue);
+      this.p1PlayedId = this.getPlayer()[1].id
       return this.isRoundWinner()
     })
 
@@ -1550,6 +1553,7 @@ class Euchre {
         var pcardvalue = CARD_VALUE_MAP[this.getPlayer()[2].firstElementChild.dataset.value.slice(0,2).trim()]
       }
       this.roundValues.push(pcardvalue);
+      this.p1PlayedId = this.getPlayer()[2].id
       return this.isRoundWinner()
     })
 
@@ -1572,6 +1576,7 @@ class Euchre {
         var pcardvalue = CARD_VALUE_MAP[this.getPlayer()[3].firstElementChild.dataset.value.slice(0,2).trim()]
       }
       this.roundValues.push(pcardvalue);
+      this.p1PlayedId = this.getPlayer()[3].id
       return this.isRoundWinner()
     })
 
@@ -1594,6 +1599,7 @@ class Euchre {
         var pcardvalue = CARD_VALUE_MAP[this.getPlayer()[4].firstElementChild.dataset.value.slice(0,2).trim()]
       }
       this.roundValues.push(pcardvalue);
+      this.p1PlayedId = this.getPlayer()[4].id
       return this.isRoundWinner()
     })
 
@@ -1607,10 +1613,10 @@ class Euchre {
   playerPickUp() {
     upcard.classList.toggle('selected');
     upcard.addEventListener('click', () => {
-      this.playerDiscard();
       passButton.style.display = 'none';
       passButton.classList.add('disabled')
       upcard.classList.add('disabled')
+      return this.playerDiscard();
     })
     // text.innerText = 'Click on card to pick it up.';
     // var listener = function() {
@@ -1655,7 +1661,7 @@ class Euchre {
     newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
     newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
     newDiv.dataset.value = upcard.firstElementChild.dataset.value;
-    playerCardSlot1.appendChild(newDiv);
+    playerCardSlot2.appendChild(newDiv);
 
 
     playerCardSlot1.classList.add('disabled')
@@ -1668,10 +1674,79 @@ class Euchre {
     return this.playHand();
   }
 
+  clickHandler3() {
+    playerCardSlot3.innerHTML = '';
+    upcard.style.display = 'none';
+    upcard.classList.add('disabled')
+
+
+    var newDiv = document.createElement('div');
+    newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
+    newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
+    newDiv.dataset.value = upcard.firstElementChild.dataset.value;
+    playerCardSlot3.appendChild(newDiv);
+
+
+    playerCardSlot1.classList.add('disabled')
+    playerCardSlot2.classList.add('disabled')
+    playerCardSlot3.classList.add('disabled')
+    playerCardSlot4.classList.add('disabled')
+    playerCardSlot5.classList.add('disabled')
+
+    this.stopAnimation();
+    return this.playHand();
+  }
+
+  clickHandler4() {
+    playerCardSlot4.innerHTML = '';
+    upcard.style.display = 'none';
+    upcard.classList.add('disabled')
+
+
+    var newDiv = document.createElement('div');
+    newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
+    newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
+    newDiv.dataset.value = upcard.firstElementChild.dataset.value;
+    playerCardSlot4.appendChild(newDiv);
+
+
+    playerCardSlot1.classList.add('disabled')
+    playerCardSlot2.classList.add('disabled')
+    playerCardSlot3.classList.add('disabled')
+    playerCardSlot4.classList.add('disabled')
+    playerCardSlot5.classList.add('disabled')
+
+    this.stopAnimation();
+    return this.playHand();
+  }
+
+  clickHandler5() {
+    playerCardSlot5.innerHTML = '';
+    upcard.style.display = 'none';
+    upcard.classList.add('disabled')
+
+
+    var newDiv = document.createElement('div');
+    newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
+    newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
+    newDiv.dataset.value = upcard.firstElementChild.dataset.value;
+    playerCardSlot5.appendChild(newDiv);
+
+
+    playerCardSlot1.classList.add('disabled')
+    playerCardSlot2.classList.add('disabled')
+    playerCardSlot3.classList.add('disabled')
+    playerCardSlot4.classList.add('disabled')
+    playerCardSlot5.classList.add('disabled')
+
+    this.stopAnimation();
+    return this.playHand();
+  }
 
   playerDiscard() {
     // upcard.removeEventListener('click', this.listener, true);
     text.innerText = 'Click on card you want to replace.';
+    this.count = 0
     playerCardSlot1.classList.toggle('cselected');
     playerCardSlot2.classList.toggle('cselected');
     playerCardSlot3.classList.toggle('cselected');
@@ -1679,9 +1754,13 @@ class Euchre {
     playerCardSlot5.classList.toggle('cselected');
 
     //if player card x is clicked run the click event
+    playerCardSlot1.addEventListener('click', this.clickHandler);
+    playerCardSlot2.addEventListener('click', this.clickHandler2);
 
-    playerCardSlot1.addEventListener('click', this.clickHandler());
-    // playerCardSlot2.addEventListener('click', this.clickHandler2());
+    if (this.count === 1) {
+      this.stopAnimation();
+      return this.playHand();
+    }
     // playerCardSlot1.removeEventListener('click', this.clickHandler(), true);
       // playerCardSlot1.innerHTML = '';
       // console.log(playerCardSlot1);
