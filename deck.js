@@ -140,9 +140,9 @@ class Euchre {
     this.score2 = document.getElementById('score2');
     this.deck = new Deck(); //i.e. game.deck.shuffle();
     this.cards = new Card(); // I don't think I need to use this, but it's possible.
+    this.slots = [playerCardSlot1, playerCardSlot2, playerCardSlot3, playerCardSlot4, playerCardSlot5];
+    this.handlers = this.slots.map(slot => () => this.clickHandler(slot));
 
-    // this.team1 = document.getElementsByClassName('t1');
-    // this.team2 = document.getElementsByClassName('t2');
   }
 
   get dealer() {
@@ -1420,13 +1420,13 @@ class Euchre {
     return this.leader
   }
 
-  play() {
+  play() { //user play function
     console.log('who is leader during my turn? leader is '+this.leader);
     // this.leader = 0;
     text.innerText = 'Your move!'
     var arroop = [];
     var holding = [];
-    this.getPlayer().forEach(card => arroop.push(card.firstElementChild.dataset.value.slice(2).trim()))
+    this.playerCardsArray.forEach(card => arroop.push(card.firstElementChild.dataset.value.slice(2).trim()))
 
     function getAllIndexes (arr, val) {
       var indexes = [], i = -1;
@@ -1496,18 +1496,18 @@ class Euchre {
       playerCardSlot5.classList.remove('cselected')
 
       console.log(`on clicking first card, Player ${this.leader} plays a card`);
-      document.getElementById(this.getPlayer()[0].id).style.gridRowStart=6;
-      document.getElementById(this.getPlayer()[0].id).style.gridColumnStart=5;
+      document.getElementById(this.playerCardsArray[0].id).style.gridRowStart=6;
+      document.getElementById(this.playerCardsArray[0].id).style.gridColumnStart=5;
       console.log(`Player throws a card`);
       //Need to account for if the user plays the left
-      if (this.getPlayer()[0].firstElementChild.dataset.value.slice(2).trim() === this.roundTrump) {
-        var pcardvalue = TRUMP_VALUE_MAP[this.getPlayer()[0].firstElementChild.dataset.value.slice(0,2).trim()]
+      if (this.playerCardsArray[0].firstElementChild.dataset.value.slice(2).trim() === this.roundTrump) {
+        var pcardvalue = TRUMP_VALUE_MAP[this.playerCardsArray[0].firstElementChild.dataset.value.slice(0,2).trim()]
       } else {
-        var pcardvalue = CARD_VALUE_MAP[this.getPlayer()[0].firstElementChild.dataset.value.slice(0,2).trim()]
+        var pcardvalue = CARD_VALUE_MAP[this.playerCardsArray[0].firstElementChild.dataset.value.slice(0,2).trim()]
       }
       this.roundValues.push(pcardvalue);
       console.log('dealer is '+this.realdealer); //if this.realdealer === 0 return this.isRoundWinner
-      this.p1PlayedId = this.getPlayer()[0].id
+      this.p1PlayedId = this.playerCardsArray[0].id
       return this.isRoundWinner()
     })
 
@@ -1520,17 +1520,17 @@ class Euchre {
       playerCardSlot4.classList.remove('cselected')
       playerCardSlot5.classList.remove('cselected')
 
-      document.getElementById(this.getPlayer()[1].id).style.gridRowStart=6;
-      document.getElementById(this.getPlayer()[1].id).style.gridColumnStart=5;
+      document.getElementById(this.playerCardsArray[1].id).style.gridRowStart=6;
+      document.getElementById(this.playerCardsArray[1].id).style.gridColumnStart=5;
       console.log(`Player throws a card`);
       //Need to account for if the user plays the left
-      if (this.getPlayer()[1].firstElementChild.dataset.value.slice(2).trim() === this.roundTrump) {
-        var pcardvalue = TRUMP_VALUE_MAP[this.getPlayer()[1].firstElementChild.dataset.value.slice(0,2).trim()]
+      if (this.playerCardsArray[1].firstElementChild.dataset.value.slice(2).trim() === this.roundTrump) {
+        var pcardvalue = TRUMP_VALUE_MAP[this.playerCardsArray[1].firstElementChild.dataset.value.slice(0,2).trim()]
       } else {
-        var pcardvalue = CARD_VALUE_MAP[this.getPlayer()[1].firstElementChild.dataset.value.slice(0,2).trim()]
+        var pcardvalue = CARD_VALUE_MAP[this.playerCardsArray[1].firstElementChild.dataset.value.slice(0,2).trim()]
       }
       this.roundValues.push(pcardvalue);
-      this.p1PlayedId = this.getPlayer()[1].id
+      this.p1PlayedId = this.playerCardsArray[1].id
       return this.isRoundWinner()
     })
 
@@ -1543,17 +1543,17 @@ class Euchre {
       playerCardSlot4.classList.remove('cselected')
       playerCardSlot5.classList.remove('cselected')
 
-      document.getElementById(this.getPlayer()[2].id).style.gridRowStart=6;
-      document.getElementById(this.getPlayer()[2].id).style.gridColumnStart=5;
+      document.getElementById(this.playerCardsArray[2].id).style.gridRowStart=6;
+      document.getElementById(this.playerCardsArray[2].id).style.gridColumnStart=5;
       console.log(`Player throws a card`);
       //Need to account for if the user plays the left
-      if (this.getPlayer()[2].firstElementChild.dataset.value.slice(2).trim() === this.roundTrump) {
-        var pcardvalue = TRUMP_VALUE_MAP[this.getPlayer()[2].firstElementChild.dataset.value.slice(0,2).trim()]
+      if (this.playerCardsArray[2].firstElementChild.dataset.value.slice(2).trim() === this.roundTrump) {
+        var pcardvalue = TRUMP_VALUE_MAP[this.playerCardsArray[2].firstElementChild.dataset.value.slice(0,2).trim()]
       } else {
-        var pcardvalue = CARD_VALUE_MAP[this.getPlayer()[2].firstElementChild.dataset.value.slice(0,2).trim()]
+        var pcardvalue = CARD_VALUE_MAP[this.playerCardsArray[2].firstElementChild.dataset.value.slice(0,2).trim()]
       }
       this.roundValues.push(pcardvalue);
-      this.p1PlayedId = this.getPlayer()[2].id
+      this.p1PlayedId = this.playerCardsArray[2].id
       return this.isRoundWinner()
     })
 
@@ -1566,17 +1566,17 @@ class Euchre {
       playerCardSlot3.classList.remove('cselected')
       playerCardSlot5.classList.remove('cselected')
 
-      document.getElementById(this.getPlayer()[3].id).style.gridRowStart=6;
-      document.getElementById(this.getPlayer()[3].id).style.gridColumnStart=5;
+      document.getElementById(this.playerCardsArray[3].id).style.gridRowStart=6;
+      document.getElementById(this.playerCardsArray[3].id).style.gridColumnStart=5;
       console.log(`Player throws a card`);
       //Need to account for if the user plays the left
-      if (this.getPlayer()[3].firstElementChild.dataset.value.slice(2).trim() === this.roundTrump) {
-        var pcardvalue = TRUMP_VALUE_MAP[this.getPlayer()[3].firstElementChild.dataset.value.slice(0,2).trim()]
+      if (this.playerCardsArray[3].firstElementChild.dataset.value.slice(2).trim() === this.roundTrump) {
+        var pcardvalue = TRUMP_VALUE_MAP[this.playerCardsArray[3].firstElementChild.dataset.value.slice(0,2).trim()]
       } else {
-        var pcardvalue = CARD_VALUE_MAP[this.getPlayer()[3].firstElementChild.dataset.value.slice(0,2).trim()]
+        var pcardvalue = CARD_VALUE_MAP[this.playerCardsArray[3].firstElementChild.dataset.value.slice(0,2).trim()]
       }
       this.roundValues.push(pcardvalue);
-      this.p1PlayedId = this.getPlayer()[3].id
+      this.p1PlayedId = this.playerCardsArray[3].id
       return this.isRoundWinner()
     })
 
@@ -1589,17 +1589,17 @@ class Euchre {
       playerCardSlot3.classList.remove('cselected')
       playerCardSlot4.classList.remove('cselected')
 
-      document.getElementById(this.getPlayer()[4].id).style.gridRowStart=6;
-      document.getElementById(this.getPlayer()[4].id).style.gridColumnStart=5;
+      document.getElementById(this.playerCardsArray[4].id).style.gridRowStart=6;
+      document.getElementById(this.playerCardsArray[4].id).style.gridColumnStart=5;
       console.log(`Player throws a card`);
       //Need to account for if the user plays the left
-      if (this.getPlayer()[4].firstElementChild.dataset.value.slice(2).trim() === this.roundTrump) {
-        var pcardvalue = TRUMP_VALUE_MAP[this.getPlayer()[4].firstElementChild.dataset.value.slice(0,2).trim()]
+      if (this.playerCardsArray[4].firstElementChild.dataset.value.slice(2).trim() === this.roundTrump) {
+        var pcardvalue = TRUMP_VALUE_MAP[this.playerCardsArray[4].firstElementChild.dataset.value.slice(0,2).trim()]
       } else {
-        var pcardvalue = CARD_VALUE_MAP[this.getPlayer()[4].firstElementChild.dataset.value.slice(0,2).trim()]
+        var pcardvalue = CARD_VALUE_MAP[this.playerCardsArray[4].firstElementChild.dataset.value.slice(0,2).trim()]
       }
       this.roundValues.push(pcardvalue);
-      this.p1PlayedId = this.getPlayer()[4].id
+      this.p1PlayedId = this.playerCardsArray[4].id
       return this.isRoundWinner()
     })
 
@@ -1608,276 +1608,259 @@ class Euchre {
 
 }
 
-
+  clickHandlerX() {
+    passButton.style.display = 'none';
+    passButton.classList.add('disabled')
+    upcard.classList.add('disabled')
+    return this.playerDiscard();
+  }
 
   playerPickUp() {
     upcard.classList.toggle('selected');
-    upcard.addEventListener('click', () => {
-      passButton.style.display = 'none';
-      passButton.classList.add('disabled')
-      upcard.classList.add('disabled')
-      return this.playerDiscard();
-    })
-    // text.innerText = 'Click on card to pick it up.';
-    // var listener = function() {
-    //   passButton.style.display = 'none';
-    //   passButton.classList.add('disabled')
-    //   upcard.removeEventListener('click', listener, true);
-    //   this.playerDiscard();
-    // }
-    // upcard.addEventListener('click', listener, true);
+    upcard.addEventListener('click', () => this.clickHandlerX(), {once:true});
 }
 
-  clickHandler() {
-    playerCardSlot1.innerHTML = '';
-    upcard.classList.add('disabled')
+//   clickHandler() {
+//     playerCardSlot1.innerHTML = '';
+//     upcard.classList.add('disabled')
+//     upcard.style.display = 'none';
+//     this.count = 1;
+//     console.log('count is '+this.count);
+//
+//
+//     var newDiv = document.createElement('div');
+//     newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
+//     newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
+//     newDiv.dataset.value = upcard.firstElementChild.dataset.value;
+//     playerCardSlot1.appendChild(newDiv);
+//
+//
+//
+//     playerCardSlot1.classList.add('disabled')
+//     playerCardSlot2.classList.add('disabled')
+//     playerCardSlot3.classList.add('disabled')
+//     playerCardSlot4.classList.add('disabled')
+//     playerCardSlot5.classList.add('disabled')
+//
+//     const func = () => this.clickHandler()
+//     const func2 = () => this.clickHandler2()
+//     const func3 = () => this.clickHandler3()
+//     const func4 = () => this.clickHandler4()
+//     const func5 = () => this.clickHandler5()
+//
+//     playerCardSlot1.removeEventListener('click', func);
+//     playerCardSlot2.removeEventListener('click', func2);
+//     playerCardSlot3.removeEventListener('click', func3);
+//     playerCardSlot4.removeEventListener('click', func4);
+//     playerCardSlot5.removeEventListener('click', func5);
+//
+//     this.stopAnimation();
+//     return this.playHand();
+// }
+//
+//   clickHandler2() {
+//     playerCardSlot2.innerHTML = '';
+//     upcard.style.display = 'none';
+//     upcard.classList.add('disabled')
+//     this.count = 1;
+//
+//     var newDiv = document.createElement('div');
+//     newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
+//     newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
+//     newDiv.dataset.value = upcard.firstElementChild.dataset.value;
+//     playerCardSlot2.appendChild(newDiv);
+//
+//
+//     playerCardSlot1.classList.add('disabled')
+//     playerCardSlot2.classList.add('disabled')
+//     playerCardSlot3.classList.add('disabled')
+//     playerCardSlot4.classList.add('disabled')
+//     playerCardSlot5.classList.add('disabled')
+//
+//     const func = () => this.clickHandler()
+//     const func2 = () => this.clickHandler2()
+//     const func3 = () => this.clickHandler3()
+//     const func4 = () => this.clickHandler4()
+//     const func5 = () => this.clickHandler5()
+//
+//     playerCardSlot1.removeEventListener('click', func);
+//     playerCardSlot2.removeEventListener('click', func2);
+//     playerCardSlot3.removeEventListener('click', func3);
+//     playerCardSlot4.removeEventListener('click', func4);
+//     playerCardSlot5.removeEventListener('click', func5);
+//
+//
+//
+//     this.stopAnimation();
+//
+//     return this.playHand();
+//   }
+//
+//   clickHandler3() {
+//     playerCardSlot3.innerHTML = '';
+//     upcard.style.display = 'none';
+//     upcard.classList.add('disabled')
+//     this.count = 1;
+//
+//     var newDiv = document.createElement('div');
+//     newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
+//     newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
+//     newDiv.dataset.value = upcard.firstElementChild.dataset.value;
+//     playerCardSlot3.appendChild(newDiv);
+//
+//
+//     playerCardSlot1.classList.add('disabled')
+//     playerCardSlot2.classList.add('disabled')
+//     playerCardSlot3.classList.add('disabled')
+//     playerCardSlot4.classList.add('disabled')
+//     playerCardSlot5.classList.add('disabled')
+//
+//     const func = () => this.clickHandler()
+//     const func2 = () => this.clickHandler2()
+//     const func3 = () => this.clickHandler3()
+//     const func4 = () => this.clickHandler4()
+//     const func5 = () => this.clickHandler5()
+//
+//     playerCardSlot1.removeEventListener('click', func);
+//     playerCardSlot2.removeEventListener('click', func2);
+//     playerCardSlot3.removeEventListener('click', func3);
+//     playerCardSlot4.removeEventListener('click', func4);
+//     playerCardSlot5.removeEventListener('click', func5);
+//
+//
+//     this.stopAnimation();
+//     return this.playHand();
+//   }
+//
+//   clickHandler4() {
+//     playerCardSlot4.innerHTML = '';
+//     upcard.style.display = 'none';
+//     upcard.classList.add('disabled')
+//     this.count = 1;
+//
+//     var newDiv = document.createElement('div');
+//     newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
+//     newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
+//     newDiv.dataset.value = upcard.firstElementChild.dataset.value;
+//     playerCardSlot4.appendChild(newDiv);
+//
+//
+//     playerCardSlot1.classList.add('disabled')
+//     playerCardSlot2.classList.add('disabled')
+//     playerCardSlot3.classList.add('disabled')
+//     playerCardSlot4.classList.add('disabled')
+//     playerCardSlot5.classList.add('disabled')
+//
+//     const func = () => this.clickHandler()
+//     const func2 = () => this.clickHandler2()
+//     const func3 = () => this.clickHandler3()
+//     const func4 = () => this.clickHandler4()
+//     const func5 = () => this.clickHandler5()
+//
+//     playerCardSlot1.removeEventListener('click', func);
+//     playerCardSlot2.removeEventListener('click', func2);
+//     playerCardSlot3.removeEventListener('click', func3);
+//     playerCardSlot4.removeEventListener('click', func4);
+//     playerCardSlot5.removeEventListener('click', func5);
+//
+//
+//
+//     this.stopAnimation();
+//     return this.playHand();
+//   }
+//
+  // clickHandler5() {
+  //   playerCardSlot5.innerHTML = '';
+  //   upcard.style.display = 'none';
+  //   upcard.classList.add('disabled')
+  //   this.count = 1;
+  //
+  //   var newDiv = document.createElement('div');
+  //   newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
+  //   newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
+  //   newDiv.dataset.value = upcard.firstElementChild.dataset.value;
+  //   playerCardSlot5.appendChild(newDiv);
+  //
+  //
+  //   playerCardSlot1.classList.add('disabled')
+  //   playerCardSlot2.classList.add('disabled')
+  //   playerCardSlot3.classList.add('disabled')
+  //   playerCardSlot4.classList.add('disabled')
+  //   playerCardSlot5.classList.add('disabled')
+  //
+  //   const func = () => this.clickHandler()
+  //   const func2 = () => this.clickHandler2()
+  //   const func3 = () => this.clickHandler3()
+  //   const func4 = () => this.clickHandler4()
+  //   const func5 = () => this.clickHandler5()
+  //
+  //   playerCardSlot1.removeEventListener('click', func);
+  //   playerCardSlot2.removeEventListener('click', func2);
+  //   playerCardSlot3.removeEventListener('click', func3);
+  //   playerCardSlot4.removeEventListener('click', func4);
+  //   playerCardSlot5.removeEventListener('click', func5);
+  //
+  //   this.stopAnimation();
+  //   return this.playHand();
+  // }
+
+  clickHandler(slot) {
+    slot.innerHTML = '';
     upcard.style.display = 'none';
+    upcard.classList.add('disabled')
 
-
-    var newDiv = document.createElement('div');
+    let newDiv = document.createElement('div');
     newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
     newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
     newDiv.dataset.value = upcard.firstElementChild.dataset.value;
-    playerCardSlot1.appendChild(newDiv);
-
-
-    playerCardSlot1.classList.add('disabled')
-    playerCardSlot2.classList.add('disabled')
-    playerCardSlot3.classList.add('disabled')
-    playerCardSlot4.classList.add('disabled')
-    playerCardSlot5.classList.add('disabled')
-
-    this.stopAnimation();
-    return this.playHand();
-}
-
-  clickHandler2() {
-    playerCardSlot2.innerHTML = '';
-    upcard.style.display = 'none';
-    upcard.classList.add('disabled')
-
-
-    var newDiv = document.createElement('div');
-    newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
-    newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
-    newDiv.dataset.value = upcard.firstElementChild.dataset.value;
-    playerCardSlot2.appendChild(newDiv);
-
-
-    playerCardSlot1.classList.add('disabled')
-    playerCardSlot2.classList.add('disabled')
-    playerCardSlot3.classList.add('disabled')
-    playerCardSlot4.classList.add('disabled')
-    playerCardSlot5.classList.add('disabled')
-
+    slot.appendChild(newDiv);
+    this.slots.forEach(slot => slot.classList.add('disabled'));
+    this.slots.forEach((slot, position) => slot.removeEventListener('click', this.handlers[position]));
     this.stopAnimation();
     return this.playHand();
   }
-
-  clickHandler3() {
-    playerCardSlot3.innerHTML = '';
-    upcard.style.display = 'none';
-    upcard.classList.add('disabled')
-
-
-    var newDiv = document.createElement('div');
-    newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
-    newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
-    newDiv.dataset.value = upcard.firstElementChild.dataset.value;
-    playerCardSlot3.appendChild(newDiv);
-
-
-    playerCardSlot1.classList.add('disabled')
-    playerCardSlot2.classList.add('disabled')
-    playerCardSlot3.classList.add('disabled')
-    playerCardSlot4.classList.add('disabled')
-    playerCardSlot5.classList.add('disabled')
-
-    this.stopAnimation();
-    return this.playHand();
-  }
-
-  clickHandler4() {
-    playerCardSlot4.innerHTML = '';
-    upcard.style.display = 'none';
-    upcard.classList.add('disabled')
-
-
-    var newDiv = document.createElement('div');
-    newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
-    newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
-    newDiv.dataset.value = upcard.firstElementChild.dataset.value;
-    playerCardSlot4.appendChild(newDiv);
-
-
-    playerCardSlot1.classList.add('disabled')
-    playerCardSlot2.classList.add('disabled')
-    playerCardSlot3.classList.add('disabled')
-    playerCardSlot4.classList.add('disabled')
-    playerCardSlot5.classList.add('disabled')
-
-    this.stopAnimation();
-    return this.playHand();
-  }
-
-  clickHandler5() {
-    playerCardSlot5.innerHTML = '';
-    upcard.style.display = 'none';
-    upcard.classList.add('disabled')
-
-
-    var newDiv = document.createElement('div');
-    newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
-    newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
-    newDiv.dataset.value = upcard.firstElementChild.dataset.value;
-    playerCardSlot5.appendChild(newDiv);
-
-
-    playerCardSlot1.classList.add('disabled')
-    playerCardSlot2.classList.add('disabled')
-    playerCardSlot3.classList.add('disabled')
-    playerCardSlot4.classList.add('disabled')
-    playerCardSlot5.classList.add('disabled')
-
-    this.stopAnimation();
-    return this.playHand();
-  }
-
+  
   playerDiscard() {
     // upcard.removeEventListener('click', this.listener, true);
     text.innerText = 'Click on card you want to replace.';
-    this.count = 0
-    playerCardSlot1.classList.toggle('cselected');
-    playerCardSlot2.classList.toggle('cselected');
-    playerCardSlot3.classList.toggle('cselected');
-    playerCardSlot4.classList.toggle('cselected');
-    playerCardSlot5.classList.toggle('cselected');
-
-    //if player card x is clicked run the click event
-    playerCardSlot1.addEventListener('click', this.clickHandler);
-    playerCardSlot2.addEventListener('click', this.clickHandler2);
-
-    if (this.count === 1) {
-      this.stopAnimation();
-      return this.playHand();
-    }
-    // playerCardSlot1.removeEventListener('click', this.clickHandler(), true);
-      // playerCardSlot1.innerHTML = '';
-      // console.log(playerCardSlot1);
-      // console.log(this.playerCardsArray[0]);
-      // console.log(this.playerCardsArray);
-      // upcard.classList.remove('deck');
-      // upcard.style.display = 'none';
-      // upcard.classList.add('disabled')
-      //
-      // // this.leader = 0;
-      // console.log('id is '+this.getPlayer()[0].id);
-      // var newDiv = document.createElement('div');
-      // newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
-      // newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
-      // newDiv.dataset.value = upcard.firstElementChild.dataset.value;
-      // playerCardSlot1.appendChild(newDiv);
-      // console.log('player array card one '+this.playerCardsArray[0].firstElementChild.dataset.value);
-      //
-      //
-      // playerCardSlot1.classList.add('disabled')
-      // playerCardSlot2.classList.add('disabled')
-      // playerCardSlot3.classList.add('disabled')
-      // playerCardSlot4.classList.add('disabled')
-      // playerCardSlot5.classList.add('disabled')
-      // this.stopAnimation();
-      // return this.playHand(); //this runs but will need conditional depending on who leads
-      //depends on order of play
-      // return this.playHand();
+    // this.count = 0
+    // playerCardSlot1.classList.toggle('cselected');
+    // playerCardSlot2.classList.toggle('cselected');
+    // playerCardSlot3.classList.toggle('cselected');
+    // playerCardSlot4.classList.toggle('cselected');
+    // playerCardSlot5.classList.toggle('cselected');
+    //
+    // const func = () => this.clickHandler()
+    // const func2 = () => this.clickHandler2()
+    // const func3 = () => this.clickHandler3()
+    // const func4 = () => this.clickHandler4()
+    // const func5 = () => this.clickHandler5()
 
 
-    // playerCardSlot2.addEventListener('click', () => {
-    //   playerCardSlot2.innerHTML = '';
-    //   upcard.style.display = 'none';
-    //   upcard.classList.add('disabled')
-    //
-    //   var newDiv = document.createElement('div');
-    //   newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
-    //   newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
-    //   newDiv.dataset.value = upcard.firstElementChild.dataset.value;
-    //   playerCardSlot2.appendChild(newDiv);
-    //
-    //   playerCardSlot1.classList.add('disabled')
-    //   playerCardSlot2.classList.add('disabled')
-    //   playerCardSlot3.classList.add('disabled')
-    //   playerCardSlot4.classList.add('disabled')
-    //   playerCardSlot5.classList.add('disabled')
-    //   this.stopAnimation();
-    //   return this.playHand();
-    //
-    // })
-    //
-    // playerCardSlot3.addEventListener('click', () => {
-    //   playerCardSlot3.innerHTML = '';
-    //   upcard.style.display = 'none';
-    //   upcard.classList.add('disabled')
-    //
-    //   var newDiv = document.createElement('div');
-    //   newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
-    //   newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
-    //   newDiv.dataset.value = upcard.firstElementChild.dataset.value;
-    //   playerCardSlot3.appendChild(newDiv);
-    //
-    //   playerCardSlot1.classList.add('disabled')
-    //   playerCardSlot2.classList.add('disabled')
-    //   playerCardSlot3.classList.add('disabled')
-    //   playerCardSlot4.classList.add('disabled')
-    //   playerCardSlot5.classList.add('disabled')
-    //   this.stopAnimation();
-    //   return this.playHand();
-    //
-    // })
-    //
-    //
-    // playerCardSlot4.addEventListener('click', () => {
-    //   playerCardSlot4.innerHTML = '';
-    //   upcard.style.display = 'none';
-    //   upcard.classList.add('disabled')
-    //
-    //   var newDiv = document.createElement('div');
-    //   newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
-    //   newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
-    //   newDiv.dataset.value = upcard.firstElementChild.dataset.value;
-    //   playerCardSlot4.appendChild(newDiv);
-    //
-    //   playerCardSlot1.classList.add('disabled')
-    //   playerCardSlot2.classList.add('disabled')
-    //   playerCardSlot3.classList.add('disabled')
-    //   playerCardSlot4.classList.add('disabled')
-    //   playerCardSlot5.classList.add('disabled')
-    //   this.stopAnimation();
-    //   return this.playHand();
-    // })
-    //
-    //
-    // playerCardSlot5.addEventListener('click', () => {
-    //   playerCardSlot5.innerHTML = '';
-    //   upcard.style.display = 'none';
-    //   upcard.classList.add('disabled')
-    //
-    //   var newDiv = document.createElement('div');
-    //   newDiv.innerText = upcard.firstElementChild.dataset.value.slice(2).trim();
-    //   newDiv.classList.add('card', upcard.firstElementChild.className.split(' ')[1]);
-    //   newDiv.dataset.value = upcard.firstElementChild.dataset.value;
-    //   playerCardSlot5.appendChild(newDiv);
-    //
-    //   playerCardSlot1.classList.add('disabled')
-    //   playerCardSlot2.classList.add('disabled')
-    //   playerCardSlot3.classList.add('disabled')
-    //   playerCardSlot4.classList.add('disabled')
-    //   playerCardSlot5.classList.add('disabled')
-    //   this.stopAnimation();
-    //   return this.playHand();
-    // })
+
+    //if playercard x is clicked run that click event and stop/disable the other 4 click events!
+
+    // playerCardSlot1.addEventListener('click', () => this.clickHandler(), {once:true});
+    // playerCardSlot2.addEventListener('click', () => this.clickHandler2(), {once:true});
+    // playerCardSlot3.addEventListener('click', () => this.clickHandler3(), {once:true});
+    // playerCardSlot4.addEventListener('click', () => this.clickHandler4(), {once:true});
+    // playerCardSlot5.addEventListener('click', () => this.clickHandler5(), {once:true});
+
+    // playerCardSlot1.addEventListener('click', func, {once:true});
+    // playerCardSlot2.addEventListener('click', func2, {once:true});
+    // playerCardSlot3.addEventListener('click', func3, {once:true});
+    // playerCardSlot4.addEventListener('click', func4, {once:true});
+    // playerCardSlot5.addEventListener('click', func5, {once:true});
+
+    // playerCardSlot1.removeEventListener('click', func, {once:true});
+    // playerCardSlot2.removeEventListener('click', func2, {once:true});
+    // playerCardSlot3.removeEventListener('click', func3, {once:true});
+    // playerCardSlot4.removeEventListener('click', func4, {once:true});
+    // playerCardSlot5.removeEventListener('click', func5, {once:true});
+    this.slots.forEach(slot => slot.classList.toggle('cselected'));
+    this.slots.forEach((slot, position) => slot.addEventListener('click', this.handlers[position], {once:true}));
 
   }
-
-
 
   stopAnimation() {
     playerCardSlot1.classList.toggle('cselected');
@@ -1939,6 +1922,9 @@ class Euchre {
       // this.leader = 0;
       // return this.nextRound();
     }
+    else {
+      return
+    }
   }
 
   trickTaker() {
@@ -1960,7 +1946,6 @@ function ready() {
   let game = new Euchre(playerCards, cpuOneCards, cpuTwoCards, cpuThreeCards, upcard);
   game.startGame();
   game.startRound();
-
 
   }
 
